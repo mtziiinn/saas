@@ -20,7 +20,7 @@ router.use(requireAuth);
 router.get("/contacts", async (req, res) => {
   const query = ListContactsQueryParams.safeParse(req.query);
   if (!query.success) {
-    res.status(400).json({ error: "Invalid query params" });
+    res.status(400).json({ error: { code: "INVALID_QUERY", message: "Invalid query params" } });
     return;
   }
   const { search, status, companyId } = query.data;
@@ -55,7 +55,7 @@ router.get("/contacts", async (req, res) => {
 router.post("/contacts", async (req, res) => {
   const body = CreateContactBody.safeParse(req.body);
   if (!body.success) {
-    res.status(400).json({ error: "Invalid body" });
+    res.status(400).json({ error: { code: "INVALID_BODY", message: "Invalid body" } });
     return;
   }
   const token = crypto.randomBytes(16).toString("hex");
@@ -95,7 +95,7 @@ router.post("/contacts", async (req, res) => {
 router.get("/contacts/:id", async (req, res) => {
   const params = GetContactParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) {
-    res.status(400).json({ error: "Invalid id" });
+    res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } });
     return;
   }
   const [row] = await db
@@ -117,7 +117,7 @@ router.get("/contacts/:id", async (req, res) => {
     .where(eq(contactsTable.id, params.data.id));
 
   if (!row) {
-    res.status(404).json({ error: "Not found" });
+    res.status(404).json({ error: { code: "NOT_FOUND", message: "Not found" } });
     return;
   }
   res.json({ ...row, createdAt: row.createdAt.toISOString() });
@@ -127,7 +127,7 @@ router.patch("/contacts/:id", async (req, res) => {
   const params = UpdateContactParams.safeParse({ id: Number(req.params.id) });
   const body = UpdateContactBody.safeParse(req.body);
   if (!params.success || !body.success) {
-    res.status(400).json({ error: "Invalid input" });
+    res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Invalid input" } });
     return;
   }
 
@@ -141,7 +141,7 @@ router.patch("/contacts/:id", async (req, res) => {
     .returning();
 
   if (!updated) {
-    res.status(404).json({ error: "Not found" });
+    res.status(404).json({ error: { code: "NOT_FOUND", message: "Not found" } });
     return;
   }
 
@@ -176,7 +176,7 @@ router.patch("/contacts/:id", async (req, res) => {
 router.delete("/contacts/:id", async (req, res) => {
   const params = DeleteContactParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) {
-    res.status(400).json({ error: "Invalid id" });
+    res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } });
     return;
   }
   await db.delete(contactsTable).where(eq(contactsTable.id, params.data.id));
@@ -185,18 +185,18 @@ router.delete("/contacts/:id", async (req, res) => {
 
 router.get("/contacts/:id/portal-token", async (req, res) => {
   const id = Number(req.params.id);
-  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (!id) { res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } }); return; }
   const [contact] = await db
     .select({ patientToken: contactsTable.patientToken, name: contactsTable.name })
     .from(contactsTable)
     .where(eq(contactsTable.id, id));
-  if (!contact) { res.status(404).json({ error: "Not found" }); return; }
+  if (!contact) { res.status(404).json({ error: { code: "NOT_FOUND", message: "Not found" } }); return; }
   res.json(contact);
 });
 
 router.get("/contacts/:id/finances", async (req, res) => {
   const id = Number(req.params.id);
-  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (!id) { res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } }); return; }
 
   const all = await db
     .select()
@@ -212,7 +212,7 @@ router.get("/contacts/:id/finances", async (req, res) => {
 
 router.get("/contacts/:id/timeline", async (req, res) => {
   const id = Number(req.params.id);
-  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (!id) { res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } }); return; }
 
   const activities = await db
     .select()

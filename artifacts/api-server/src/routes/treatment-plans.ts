@@ -31,7 +31,7 @@ router.get("/treatment-plans", async (_req, res) => {
 
 router.get("/treatment-plans/:id", async (req, res) => {
   const id = Number(req.params.id);
-  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (!id) { res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } }); return; }
 
   const [plan] = await db
     .select(planWithRelations)
@@ -39,7 +39,7 @@ router.get("/treatment-plans/:id", async (req, res) => {
     .leftJoin(contactsTable, eq(treatmentPlansTable.contactId, contactsTable.id))
     .where(eq(treatmentPlansTable.id, id));
 
-  if (!plan) { res.status(404).json({ error: "Not found" }); return; }
+  if (!plan) { res.status(404).json({ error: { code: "NOT_FOUND", message: "Not found" } }); return; }
 
   const procedures = await db
     .select()
@@ -107,7 +107,7 @@ router.post("/treatment-plans", async (req, res) => {
 
 router.patch("/treatment-plans/:id", async (req, res) => {
   const id = Number(req.params.id);
-  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (!id) { res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } }); return; }
 
   const { title, description, status, procedures } = req.body;
 
@@ -149,7 +149,7 @@ router.patch("/treatment-plans/:id", async (req, res) => {
     .leftJoin(contactsTable, eq(treatmentPlansTable.contactId, contactsTable.id))
     .where(eq(treatmentPlansTable.id, id));
 
-  if (!plan) { res.status(404).json({ error: "Not found" }); return; }
+  if (!plan) { res.status(404).json({ error: { code: "NOT_FOUND", message: "Not found" } }); return; }
 
   const proceduresList = await db
     .select()
@@ -161,7 +161,7 @@ router.patch("/treatment-plans/:id", async (req, res) => {
 
 router.delete("/treatment-plans/:id", async (req, res) => {
   const id = Number(req.params.id);
-  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (!id) { res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } }); return; }
   await db.delete(treatmentPlansTable).where(eq(treatmentPlansTable.id, id));
   res.status(204).send();
 });

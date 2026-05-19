@@ -5,6 +5,14 @@ import { activityLogTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { sendEmail, isEmailConfigured } from "../services/email";
+import { z } from "zod/v4";
+
+const sendSchema = z.object({
+  contactId: z.number().int().positive(),
+  taskId: z.number().int().positive().optional(),
+  type: z.enum(["email", "sms"]).default("email"),
+  message: z.string().min(1).max(500),
+});
 
 const router = Router();
 router.use(requireAuth);
@@ -25,12 +33,19 @@ router.get("/notifications", async (req, res) => {
 });
 
 router.post("/notifications/send", async (req, res) => {
-  const { contactId, taskId, type, message } = req.body;
-
-  if (!contactId || !message) {
-    res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "contactId and message are required" } });
+  const parsed = sendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(422).json({
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Invalid input",
+        details: parsed.error.flatten().fieldErrors,
+      },
+    });
     return;
   }
+
+  const { contactId, taskId, type, message } = parsed.data;
 
   const [contact] = await db
     .select({ name: contactsTable.name, email: contactsTable.email, phone: contactsTable.phone })
@@ -38,7 +53,7 @@ router.post("/notifications/send", async (req, res) => {
     .where(eq(contactsTable.id, contactId));
 
   if (!contact) {
-    res.status(404).json({ error: "Contact not found" });
+    res.status(404).json({ error: { code: "NOT_FOUND", message: "Contact not found" } });
     return;
   }
 
@@ -65,7 +80,7 @@ router.post("/notifications/send", async (req, res) => {
     .values({
       contactId,
       taskId: taskId || null,
-      type: type || "email",
+      type,
       channel,
       recipient,
       message,

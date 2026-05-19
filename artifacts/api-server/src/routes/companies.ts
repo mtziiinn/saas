@@ -19,7 +19,7 @@ router.use(requireAuth);
 router.get("/companies", async (req, res) => {
   const query = ListCompaniesQueryParams.safeParse(req.query);
   if (!query.success) {
-    res.status(400).json({ error: "Invalid query params" });
+    res.status(400).json({ error: { code: "INVALID_QUERY", message: "Invalid query params" } });
     return;
   }
   const { search } = query.data;
@@ -47,7 +47,7 @@ router.get("/companies", async (req, res) => {
 router.post("/companies", async (req, res) => {
   const body = CreateCompanyBody.safeParse(req.body);
   if (!body.success) {
-    res.status(400).json({ error: "Invalid body" });
+    res.status(400).json({ error: { code: "INVALID_BODY", message: "Invalid body" } });
     return;
   }
   const [company] = await db
@@ -68,7 +68,7 @@ router.post("/companies", async (req, res) => {
 router.get("/companies/:id", async (req, res) => {
   const params = GetCompanyParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) {
-    res.status(400).json({ error: "Invalid id" });
+    res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } });
     return;
   }
 
@@ -89,7 +89,7 @@ router.get("/companies/:id", async (req, res) => {
     .where(eq(companiesTable.id, params.data.id));
 
   if (!row) {
-    res.status(404).json({ error: "Not found" });
+    res.status(404).json({ error: { code: "NOT_FOUND", message: "Not found" } });
     return;
   }
   res.json({ ...row, createdAt: row.createdAt.toISOString() });
@@ -99,7 +99,7 @@ router.patch("/companies/:id", async (req, res) => {
   const params = UpdateCompanyParams.safeParse({ id: Number(req.params.id) });
   const body = UpdateCompanyBody.safeParse(req.body);
   if (!params.success || !body.success) {
-    res.status(400).json({ error: "Invalid input" });
+    res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Invalid input" } });
     return;
   }
 
@@ -110,7 +110,7 @@ router.patch("/companies/:id", async (req, res) => {
     .returning();
 
   if (!updated) {
-    res.status(404).json({ error: "Not found" });
+    res.status(404).json({ error: { code: "NOT_FOUND", message: "Not found" } });
     return;
   }
 
@@ -136,7 +136,7 @@ router.patch("/companies/:id", async (req, res) => {
 router.delete("/companies/:id", async (req, res) => {
   const params = DeleteCompanyParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) {
-    res.status(400).json({ error: "Invalid id" });
+    res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } });
     return;
   }
   await db.delete(companiesTable).where(eq(companiesTable.id, params.data.id));

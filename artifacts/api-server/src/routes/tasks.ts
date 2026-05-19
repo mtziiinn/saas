@@ -35,7 +35,7 @@ const taskWithRelations = {
 router.get("/tasks", async (req, res) => {
   const query = ListTasksQueryParams.safeParse(req.query);
   if (!query.success) {
-    res.status(400).json({ error: "Invalid query params" });
+    res.status(400).json({ error: { code: "INVALID_QUERY", message: "Invalid query params" } });
     return;
   }
   const { status, contactId, companyId, priority } = query.data;
@@ -60,7 +60,7 @@ router.get("/tasks", async (req, res) => {
 router.post("/tasks", async (req, res) => {
   const body = CreateTaskBody.safeParse(req.body);
   if (!body.success) {
-    res.status(400).json({ error: "Invalid body" });
+    res.status(400).json({ error: { code: "INVALID_BODY", message: "Invalid body" } });
     return;
   }
   const [task] = await db.insert(tasksTable).values(body.data).returning();
@@ -85,7 +85,7 @@ router.post("/tasks", async (req, res) => {
 router.get("/tasks/:id", async (req, res) => {
   const params = GetTaskParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) {
-    res.status(400).json({ error: "Invalid id" });
+    res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } });
     return;
   }
 
@@ -97,7 +97,7 @@ router.get("/tasks/:id", async (req, res) => {
     .where(eq(tasksTable.id, params.data.id));
 
   if (!row) {
-    res.status(404).json({ error: "Not found" });
+    res.status(404).json({ error: { code: "NOT_FOUND", message: "Not found" } });
     return;
   }
   res.json({ ...row, createdAt: row.createdAt.toISOString() });
@@ -107,7 +107,7 @@ router.patch("/tasks/:id", async (req, res) => {
   const params = UpdateTaskParams.safeParse({ id: Number(req.params.id) });
   const body = UpdateTaskBody.safeParse(req.body);
   if (!params.success || !body.success) {
-    res.status(400).json({ error: "Invalid input" });
+    res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Invalid input" } });
     return;
   }
 
@@ -127,7 +127,7 @@ router.patch("/tasks/:id", async (req, res) => {
     .where(eq(tasksTable.id, params.data.id));
 
   if (!row) {
-    res.status(404).json({ error: "Not found" });
+    res.status(404).json({ error: { code: "NOT_FOUND", message: "Not found" } });
     return;
   }
   res.json({ ...row, createdAt: row.createdAt.toISOString() });
@@ -136,7 +136,7 @@ router.patch("/tasks/:id", async (req, res) => {
 router.delete("/tasks/:id", async (req, res) => {
   const params = DeleteTaskParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) {
-    res.status(400).json({ error: "Invalid id" });
+    res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } });
     return;
   }
   await db.delete(tasksTable).where(eq(tasksTable.id, params.data.id));
@@ -146,7 +146,7 @@ router.delete("/tasks/:id", async (req, res) => {
 router.patch("/tasks/:id/complete", async (req, res) => {
   const params = CompleteTaskParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) {
-    res.status(400).json({ error: "Invalid id" });
+    res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } });
     return;
   }
 
@@ -157,7 +157,7 @@ router.patch("/tasks/:id/complete", async (req, res) => {
     .returning();
 
   if (!updated) {
-    res.status(404).json({ error: "Not found" });
+    res.status(404).json({ error: { code: "NOT_FOUND", message: "Not found" } });
     return;
   }
 

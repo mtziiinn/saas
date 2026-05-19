@@ -72,7 +72,7 @@ router.get("/financial-transactions/summary", async (_req, res) => {
 
 router.get("/financial-transactions/:id", async (req, res) => {
   const id = Number(req.params.id);
-  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (!id) { res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } }); return; }
 
   const [tx] = await db
     .select(txWithRelations)
@@ -80,7 +80,7 @@ router.get("/financial-transactions/:id", async (req, res) => {
     .leftJoin(contactsTable, eq(financialTransactionsTable.contactId, contactsTable.id))
     .where(eq(financialTransactionsTable.id, id));
 
-  if (!tx) { res.status(404).json({ error: "Not found" }); return; }
+  if (!tx) { res.status(404).json({ error: { code: "NOT_FOUND", message: "Not found" } }); return; }
   res.json({ ...tx, date: tx.date.toISOString(), createdAt: tx.createdAt.toISOString() });
 });
 
@@ -120,7 +120,7 @@ router.post("/financial-transactions", async (req, res) => {
 
 router.patch("/financial-transactions/:id", async (req, res) => {
   const id = Number(req.params.id);
-  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (!id) { res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } }); return; }
 
   const { description, type, category, amount, date, status, paymentMethod, contactId, treatmentPlanId, notes } = req.body;
 
@@ -147,13 +147,13 @@ router.patch("/financial-transactions/:id", async (req, res) => {
     .leftJoin(contactsTable, eq(financialTransactionsTable.contactId, contactsTable.id))
     .where(eq(financialTransactionsTable.id, id));
 
-  if (!tx) { res.status(404).json({ error: "Not found" }); return; }
+  if (!tx) { res.status(404).json({ error: { code: "NOT_FOUND", message: "Not found" } }); return; }
   res.json({ ...tx, date: tx.date.toISOString(), createdAt: tx.createdAt.toISOString() });
 });
 
 router.delete("/financial-transactions/:id", async (req, res) => {
   const id = Number(req.params.id);
-  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (!id) { res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } }); return; }
   await db.delete(financialTransactionsTable).where(eq(financialTransactionsTable.id, id));
   res.status(204).send();
 });

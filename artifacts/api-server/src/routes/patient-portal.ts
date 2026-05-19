@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { db } from "@workspace/db";
 import { contactsTable, tasksTable, treatmentPlansTable, treatmentProceduresTable, financialTransactionsTable } from "@workspace/db";
 import { eq, sql, inArray } from "drizzle-orm";
@@ -8,7 +8,7 @@ const router = Router();
 router.get("/patient-portal/:token", async (req, res) => {
   const { token } = req.params;
   if (!token || token.length < 10) {
-    res.status(400).json({ error: "Invalid token" });
+    res.status(400).json({ error: { code: "INVALID_TOKEN", message: "Invalid token" } });
     return;
   }
 
@@ -24,7 +24,7 @@ router.get("/patient-portal/:token", async (req, res) => {
     .where(eq(contactsTable.patientToken, token));
 
   if (!contact) {
-    res.status(404).json({ error: "Paciente não encontrado" });
+    res.status(404).json({ error: { code: "NOT_FOUND", message: "Paciente não encontrado" } });
     return;
   }
 
