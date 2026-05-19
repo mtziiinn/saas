@@ -2,8 +2,10 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { contactsTable, companiesTable, tasksTable, activityLogTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
+import { requireAuth } from "../middlewares/auth";
 
 const router = Router();
+router.use(requireAuth);
 
 router.get("/dashboard/stats", async (req, res) => {
   const now = new Date();

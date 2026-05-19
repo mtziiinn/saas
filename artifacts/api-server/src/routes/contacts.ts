@@ -11,8 +11,10 @@ import {
   UpdateContactBody,
   DeleteContactParams,
 } from "@workspace/api-zod";
+import { requireAuth } from "../middlewares/auth";
 
 const router = Router();
+router.use(requireAuth);
 
 router.get("/contacts", async (req, res) => {
   const query = ListContactsQueryParams.safeParse(req.query);

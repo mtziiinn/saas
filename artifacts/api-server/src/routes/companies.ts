@@ -11,8 +11,10 @@ import {
   UpdateCompanyBody,
   DeleteCompanyParams,
 } from "@workspace/api-zod";
+import { requireAuth } from "../middlewares/auth";
 
 const router = Router();
+router.use(requireAuth);
 
 router.get("/companies", async (req, res) => {
   const query = ListCompaniesQueryParams.safeParse(req.query);

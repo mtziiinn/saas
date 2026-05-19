@@ -12,8 +12,10 @@ import {
   DeleteTaskParams,
   CompleteTaskParams,
 } from "@workspace/api-zod";
+import { requireAuth } from "../middlewares/auth";
 
 const router = Router();
+router.use(requireAuth);
 
 const taskWithRelations = {
   id: tasksTable.id,

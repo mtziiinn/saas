@@ -5,6 +5,7 @@ import {
   Building2, 
   CheckSquare, 
   Settings,
+  LogOut,
   Menu,
   Search,
   X
@@ -15,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ReactNode, useState, useEffect, useRef } from "react";
 import { useGlobalSearch, getGlobalSearchQueryKey } from '@workspace/api-client-react';
+import { useAuth } from "@/hooks/use-auth";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -150,6 +152,7 @@ function GlobalSearch() {
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
+  const { user, logout } = useAuth();
 
   const Sidebar = () => (
     <div className="flex h-full flex-col gap-y-5 bg-sidebar px-6 pb-4">
@@ -192,7 +195,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
               })}
             </ul>
           </li>
-          <li className="mt-auto">
+          <li className="mt-auto space-y-1">
+            {user && (
+              <div className="px-2 py-2 text-xs text-muted-foreground truncate border-b border-sidebar-border mb-2">
+                {user.email}
+              </div>
+            )}
             <Link
               href="/settings"
               className={`
@@ -208,6 +216,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
               />
               Settings
             </Link>
+            <button
+              onClick={logout}
+              className="group -mx-2 flex w-full gap-x-3 rounded-md p-2 text-sm font-medium leading-6 text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+            >
+              <LogOut className="h-5 w-5 shrink-0 text-sidebar-foreground/70" aria-hidden="true" />
+              Sign out
+            </button>
           </li>
         </ul>
       </nav>
