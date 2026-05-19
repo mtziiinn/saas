@@ -13,6 +13,7 @@ export const contactsTable = pgTable("contacts", {
   notes: text("notes"),
   companyId: integer("company_id").references(() => companiesTable.id, { onDelete: "set null" }),
   recallDate: text("recall_date"),
+  patientToken: text("patient_token"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

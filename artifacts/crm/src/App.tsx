@@ -16,6 +16,7 @@ import NotFound from "@/pages/not-found";
 import Settings from "@/pages/settings";
 import TreatmentPlans from "@/pages/treatment-plans";
 import Financial from "@/pages/financial";
+import PatientPortal from "@/pages/patient-portal";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ function Router() {
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/paciente/:token" component={PatientPortal} />
       <Route>
         <ProtectedRoute>
           <AppLayout>

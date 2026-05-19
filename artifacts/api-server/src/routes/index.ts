@@ -9,9 +9,11 @@ import searchRouter from "./search";
 import exportRouter from "./export";
 import treatmentPlansRouter from "./treatment-plans";
 import financialRouter from "./financial";
+import patientPortalRouter from "./patient-portal";
 
 const router: IRouter = Router();
 
+router.use(patientPortalRouter);
 router.use(healthRouter);
 router.use(authRouter);
 router.use(searchRouter);

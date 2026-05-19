@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { contactsTable, companiesTable, tasksTable, financialTransactionsTable } from "@workspace/db";
 import { activityLogTable } from "@workspace/db";
 import { eq, ilike, and, sql } from "drizzle-orm";
+import crypto from "crypto";
 import {
   ListContactsQueryParams,
   CreateContactBody,
@@ -57,9 +58,10 @@ router.post("/contacts", async (req, res) => {
     res.status(400).json({ error: "Invalid body" });
     return;
   }
+  const token = crypto.randomBytes(16).toString("hex");
   const [contact] = await db
     .insert(contactsTable)
-    .values(body.data)
+    .values({ ...body.data, patientToken: token })
     .returning();
 
   await db.insert(activityLogTable).values({
