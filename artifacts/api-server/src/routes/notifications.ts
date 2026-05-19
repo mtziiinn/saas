@@ -4,7 +4,7 @@ import { notificationsTable, contactsTable, tasksTable } from "@workspace/db";
 import { activityLogTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
-import { sendEmail, isEmailConfigured } from "../services/email";
+import { sendEmail, isEmailConfigured, buildReminderHtml } from "../services/email";
 import { z } from "zod/v4";
 
 const sendSchema = z.object({
@@ -64,7 +64,8 @@ router.post("/notifications/send", async (req, res) => {
     channel = isEmailConfigured() ? "email" : "simulado";
     recipient = contact.email;
     if (channel === "email") {
-      const sent = await sendEmail(contact.email, "Lembrete OdontoFlow", message);
+      const html = buildReminderHtml(contact.name, message);
+      const sent = await sendEmail(contact.email, "Lembrete OdontoFlow", html);
       if (!sent) {
         channel = "simulado";
         recipient = `${contact.email} (falha no envio)`;
