@@ -24,6 +24,7 @@ const taskWithRelations = {
   status: tasksTable.status,
   priority: tasksTable.priority,
   dueDate: tasksTable.dueDate,
+  clinicalNotes: tasksTable.clinicalNotes,
   contactId: tasksTable.contactId,
   contactName: contactsTable.name,
   companyId: tasksTable.companyId,
@@ -110,9 +111,12 @@ router.patch("/tasks/:id", async (req, res) => {
     return;
   }
 
+  const taskUpdateData: Record<string, unknown> = { ...body.data, updatedAt: new Date() };
+  if (req.body.clinicalNotes !== undefined) taskUpdateData.clinicalNotes = req.body.clinicalNotes || null;
+
   await db
     .update(tasksTable)
-    .set({ ...body.data, updatedAt: new Date() })
+    .set(taskUpdateData)
     .where(eq(tasksTable.id, params.data.id));
 
   const [row] = await db

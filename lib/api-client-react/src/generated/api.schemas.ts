@@ -35,6 +35,8 @@ export interface Contact {
   companyId?: number | null;
   /** @nullable */
   companyName?: string | null;
+  /** @nullable */
+  recallDate?: string | null;
   createdAt: string;
 }
 
@@ -84,6 +86,8 @@ export interface ContactUpdate {
   notes?: string | null;
   /** @nullable */
   companyId?: number | null;
+  /** @nullable */
+  recallDate?: string | null;
 }
 
 export interface Company {

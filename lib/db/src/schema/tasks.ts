@@ -11,6 +11,7 @@ export const tasksTable = pgTable("tasks", {
   status: text("status").notNull().default("pending"),
   priority: text("priority").notNull().default("medium"),
   dueDate: text("due_date"),
+  clinicalNotes: text("clinical_notes"),
   contactId: integer("contact_id").references(() => contactsTable.id, { onDelete: "set null" }),
   companyId: integer("company_id").references(() => companiesTable.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),

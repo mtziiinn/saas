@@ -14,6 +14,7 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 import NotFound from "@/pages/not-found";
 import Settings from "@/pages/settings";
+import TreatmentPlans from "@/pages/treatment-plans";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,8 @@ function Router() {
               <Route path="/companies" component={Companies} />
               <Route path="/companies/:id" component={CompanyDetail} />
               <Route path="/tasks" component={Tasks} />
+              <Route path="/treatment-plans" component={TreatmentPlans} />
+              <Route path="/treatment-plans/:id" component={TreatmentPlans} />
               <Route path="/settings" component={Settings} />
               <Route component={NotFound} />
             </Switch>

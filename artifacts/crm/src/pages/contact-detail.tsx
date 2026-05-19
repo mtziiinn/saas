@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGetContact, getGetContactQueryKey, useDeleteContact, useUpdateContact, useListTasks, getListTasksQueryKey, useGetRecentActivity, useListCompanies } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, Building2, Mail, Phone, Briefcase, Trash2, Edit, CheckCircle2, Circle, Clock } from "lucide-react";
+import { ArrowLeft, Building2, Mail, Phone, Briefcase, Trash2, Edit, CheckCircle2, Circle, Clock, CalendarClock, FileText, Stethoscope, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,9 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Link } from "wouter";
-import { format } from "date-fns";
+import { format, isBefore, parseISO, addMonths } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { PatientTimeline } from "@/components/patient-timeline";
 
 export default function ContactDetail() {
   const [, params] = useRoute("/contacts/:id");
@@ -22,8 +25,11 @@ export default function ContactDetail() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { accessToken } = useAuth();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [recallDate, setRecallDate] = useState("");
+  const [timelineItems, setTimelineItems] = useState<any[]>([]);
 
   const { data: companies } = useListCompanies();
 
@@ -41,6 +47,29 @@ export default function ContactDetail() {
 
   const { data: activities, isLoading: activitiesLoading } = useGetRecentActivity();
   const contactActivities = activities?.filter(a => a.entityId === id && (a.type === 'contact_created' || a.type === 'contact_updated')) || [];
+
+  useEffect(() => {
+    if (!contact?.recallDate) return;
+    setRecallDate(contact.recallDate);
+  }, [contact?.recallDate]);
+
+  useEffect(() => {
+    if (!accessToken || !id) return;
+    fetch(`/api/contacts/${id}/timeline`, { headers: { Authorization: `Bearer ${accessToken}` } })
+      .then(r => r.json())
+      .then(data => {
+        const items: any[] = [];
+        (data.activities || []).forEach((a: any) => {
+          items.push({ type: "activity", id: a.id, title: a.description, date: a.createdAt });
+        });
+        (data.tasks || []).forEach((t: any) => {
+          items.push({ type: "task", id: t.id, title: t.title, description: t.status === "done" ? "Concluído" : t.dueDate ? `Para ${format(parseISO(t.dueDate), "d/MM")}` : "", date: t.createdAt });
+        });
+        items.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setTimelineItems(items);
+      })
+      .catch(() => {});
+  }, [id, accessToken]);
 
   const deleteMutation = useDeleteContact();
   const updateMutation = useUpdateContact();
@@ -61,7 +90,7 @@ export default function ContactDetail() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const companyId = formData.get("companyId") as string;
-    const data = {
+    const data: Record<string, any> = {
       name: formData.get("name") as string,
       email: formData.get("email") as string,
       phone: formData.get("phone") as string,
@@ -69,15 +98,21 @@ export default function ContactDetail() {
       status: formData.get("status") as any,
       notes: formData.get("notes") as string,
       companyId: companyId ? Number(companyId) : null,
+      recallDate: recallDate || null,
     };
-    
-    updateMutation.mutate({ id, data }, {
+
+    updateMutation.mutate({ id, data } as any, {
       onSuccess: () => {
         toast({ title: "Paciente atualizado" });
         queryClient.invalidateQueries({ queryKey: getGetContactQueryKey(id) });
         setIsEditDialogOpen(false);
       }
     });
+  };
+
+  const handleSetRecall6Months = () => {
+    const d = addMonths(new Date(), 6);
+    setRecallDate(format(d, "yyyy-MM-dd"));
   };
 
   const getPriorityColor = (priority: string) => {
@@ -99,8 +134,10 @@ export default function ContactDetail() {
   }
 
   if (!contact) {
-    return     <div className="text-center py-12 text-muted-foreground">Paciente não encontrado.</div>;
+    return <div className="text-center py-12 text-muted-foreground">Paciente não encontrado.</div>;
   }
+
+  const isRecallOverdue = contact.recallDate && isBefore(parseISO(contact.recallDate), new Date());
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
@@ -111,28 +148,33 @@ export default function ContactDetail() {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">{contact.name}</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">{contact.name}</h1>
           <div className="flex items-center gap-2 mt-2">
             <Badge variant="outline">{contact.status}</Badge>
             <span className="text-sm text-muted-foreground">
-              Added {format(new Date(contact.createdAt), "MMM d, yyyy")}
+              Cadastrado em {format(new Date(contact.createdAt), "d 'de' MMM 'de' yyyy", { locale: ptBR })}
             </span>
           </div>
         </div>
         <div className="flex gap-2">
+          <Link href={`/treatment-plans?contactId=${contact.id}`}>
+            <Button variant="outline" className="gap-2" size="sm">
+              <FileText className="h-4 w-4" /> Planos
+            </Button>
+          </Link>
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2">
-                <Edit className="h-4 w-4" /> Edit
+                <Edit className="h-4 w-4" /> Editar
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle>Editar Paciente</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleUpdate} className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="name">Nome</Label>
                   <Input id="name" name="name" defaultValue={contact.name} required />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -141,21 +183,19 @@ export default function ContactDetail() {
                     <Input id="email" name="email" type="email" defaultValue={contact.email || ""} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="phone">Telefone</Label>
                     <Input id="phone" name="phone" defaultValue={contact.phone || ""} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="role">Role</Label>
+                    <Label htmlFor="role">Profissão</Label>
                     <Input id="role" name="role" defaultValue={contact.role || ""} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="status">Status</Label>
                     <Select name="status" defaultValue={contact.status}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="lead">Potencial</SelectItem>
                         <SelectItem value="prospect">Agendado</SelectItem>
@@ -168,17 +208,24 @@ export default function ContactDetail() {
                 <div className="space-y-2">
                   <Label htmlFor="companyId">Clínica</Label>
                   <Select name="companyId" defaultValue={contact.companyId ? String(contact.companyId) : ""}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="None" />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
                     <SelectContent>
                       {companies?.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="recallDate">Data de Retorno (Recall)</Label>
+                    <Button type="button" variant="ghost" size="sm" className="text-xs h-6" onClick={handleSetRecall6Months}>
+                      6 meses
+                    </Button>
+                  </div>
+                  <Input id="recallDate" type="date" value={recallDate} onChange={e => setRecallDate(e.target.value)} />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="notes">Observações</Label>
-                  <Textarea id="notes" name="notes" defaultValue={contact.notes || ""} rows={4} />
+                  <Textarea id="notes" name="notes" defaultValue={contact.notes || ""} rows={3} />
                 </div>
                 <div className="flex justify-end pt-2">
                   <Button type="submit" disabled={updateMutation.isPending}>
@@ -190,13 +237,13 @@ export default function ContactDetail() {
           </Dialog>
 
           <Button variant="destructive" className="gap-2" onClick={handleDelete}>
-            <Trash2 className="h-4 w-4" /> Delete
+            <Trash2 className="h-4 w-4" /> Excluir
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Informações do Paciente</CardTitle>
@@ -218,10 +265,18 @@ export default function ContactDetail() {
                 <Building2 className="h-4 w-4 text-muted-foreground" />
                 <span>{contact.companyName || "Sem clínica"}</span>
               </div>
-
+              {contact.recallDate && (
+                <div className="flex items-center gap-3 text-sm pt-3 border-t">
+                  <CalendarClock className={`h-4 w-4 ${isRecallOverdue ? "text-destructive" : "text-muted-foreground"}`} />
+                  <span className={isRecallOverdue ? "text-destructive font-medium" : ""}>
+                    Recall: {format(parseISO(contact.recallDate), "dd/MM/yyyy")}
+                    {isRecallOverdue && " (Vencido!)"}
+                  </span>
+                </div>
+              )}
               {contact.notes && (
-                <div className="mt-6 pt-6 border-t">
-                    <h4 className="font-medium mb-2 text-sm">Observações</h4>
+                <div className="pt-4 border-t">
+                  <h4 className="font-medium mb-2 text-sm">Observações</h4>
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">{contact.notes}</p>
                 </div>
               )}
@@ -230,7 +285,10 @@ export default function ContactDetail() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Tarefas vinculadas</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Stethoscope className="h-5 w-5 text-primary" />
+                Agendamentos
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {tasksLoading ? (
@@ -266,41 +324,64 @@ export default function ContactDetail() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground py-4 text-center">Nenhuma tarefa vinculada</p>
+                <p className="text-sm text-muted-foreground py-4 text-center">Nenhum agendamento vinculado</p>
               )}
             </CardContent>
           </Card>
         </div>
 
-        <div className="md:col-span-1">
+        <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Histórico</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                Planos de Tratamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Link href={`/treatment-plans?contactId=${contact.id}`}>
+                <Button variant="outline" size="sm" className="w-full gap-2">
+                  <FileText className="h-4 w-4" /> Ver Planos
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarClock className="h-5 w-5 text-primary" />
+                  Recall
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {contact.recallDate ? (
+                <div className="space-y-2">
+                  <p className="text-sm">
+                    Próximo retorno: <strong>{format(parseISO(contact.recallDate), "dd/MM/yyyy")}</strong>
+                  </p>
+                  {isRecallOverdue && (
+                    <Badge variant="destructive">Vencido</Badge>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Nenhum recall configurado.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-primary" />
+                Linha do Tempo
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {activitiesLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
-                </div>
-              ) : contactActivities.length > 0 ? (
-                <div className="space-y-6">
-                  {contactActivities.map((activity, index) => (
-                    <div key={activity.id} className="relative pl-6">
-                      {index !== contactActivities.length - 1 && (
-                        <div className="absolute left-2.5 top-5 bottom-[-24px] w-px bg-border" />
-                      )}
-                      <div className="absolute left-[5px] top-1.5 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium leading-none">{activity.description}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(activity.createdAt), "MMM d, yyyy 'at' h:mm a")}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <Skeleton className="h-32 w-full" />
               ) : (
-                <p className="text-sm text-muted-foreground py-4 text-center">Nenhum histórico disponível</p>
+                <PatientTimeline items={timelineItems} />
               )}
             </CardContent>
           </Card>

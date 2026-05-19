@@ -23,5 +23,7 @@ export interface Contact {
   companyId?: number | null;
   /** @nullable */
   companyName?: string | null;
+  /** @nullable */
+  recallDate?: string | null;
   createdAt: string;
 }

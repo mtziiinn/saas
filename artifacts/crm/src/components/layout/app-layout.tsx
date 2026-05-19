@@ -9,7 +9,8 @@ import {
   Menu,
   Search,
   X,
-  Stethoscope
+  Stethoscope,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -24,6 +25,7 @@ const navigation = [
   { name: "Pacientes", href: "/contacts", icon: Users },
   { name: "Clínicas", href: "/companies", icon: Building2 },
   { name: "Agendamentos", href: "/tasks", icon: CalendarClock },
+  { name: "Planos de Tratamento", href: "/treatment-plans", icon: FileText },
 ];
 
 function GlobalSearch() {

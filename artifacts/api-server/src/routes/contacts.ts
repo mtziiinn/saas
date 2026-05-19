@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { contactsTable, companiesTable } from "@workspace/db";
+import { contactsTable, companiesTable, tasksTable } from "@workspace/db";
 import { activityLogTable } from "@workspace/db";
 import { eq, ilike, and, sql } from "drizzle-orm";
 import {
@@ -38,6 +38,7 @@ router.get("/contacts", async (req, res) => {
       role: contactsTable.role,
       status: contactsTable.status,
       notes: contactsTable.notes,
+      recallDate: contactsTable.recallDate,
       companyId: contactsTable.companyId,
       companyName: companiesTable.name,
       createdAt: contactsTable.createdAt,
@@ -77,6 +78,7 @@ router.post("/contacts", async (req, res) => {
       role: contactsTable.role,
       status: contactsTable.status,
       notes: contactsTable.notes,
+      recallDate: contactsTable.recallDate,
       companyId: contactsTable.companyId,
       companyName: companiesTable.name,
       createdAt: contactsTable.createdAt,
@@ -103,6 +105,7 @@ router.get("/contacts/:id", async (req, res) => {
       role: contactsTable.role,
       status: contactsTable.status,
       notes: contactsTable.notes,
+      recallDate: contactsTable.recallDate,
       companyId: contactsTable.companyId,
       companyName: companiesTable.name,
       createdAt: contactsTable.createdAt,
@@ -126,9 +129,12 @@ router.patch("/contacts/:id", async (req, res) => {
     return;
   }
 
+  const updateData: Record<string, unknown> = { ...body.data, updatedAt: new Date() };
+  if (req.body.recallDate !== undefined) updateData.recallDate = req.body.recallDate || null;
+
   const [updated] = await db
     .update(contactsTable)
-    .set({ ...body.data, updatedAt: new Date() })
+    .set(updateData)
     .where(eq(contactsTable.id, params.data.id))
     .returning();
 
@@ -153,6 +159,7 @@ router.patch("/contacts/:id", async (req, res) => {
       role: contactsTable.role,
       status: contactsTable.status,
       notes: contactsTable.notes,
+      recallDate: contactsTable.recallDate,
       companyId: contactsTable.companyId,
       companyName: companiesTable.name,
       createdAt: contactsTable.createdAt,
@@ -172,6 +179,35 @@ router.delete("/contacts/:id", async (req, res) => {
   }
   await db.delete(contactsTable).where(eq(contactsTable.id, params.data.id));
   res.status(204).send();
+});
+
+router.get("/contacts/:id/timeline", async (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const activities = await db
+    .select()
+    .from(activityLogTable)
+    .where(eq(activityLogTable.entityId, id))
+    .orderBy(sql`${activityLogTable.createdAt} desc`);
+
+  const tasks_ = await db
+    .select({
+      id: tasksTable.id,
+      title: tasksTable.title,
+      status: tasksTable.status,
+      priority: tasksTable.priority,
+      dueDate: tasksTable.dueDate,
+      createdAt: tasksTable.createdAt,
+    })
+    .from(tasksTable)
+    .where(eq(tasksTable.contactId, id))
+    .orderBy(sql`${tasksTable.createdAt} desc`);
+
+  res.json({
+    activities: activities.map(a => ({ ...a, createdAt: a.createdAt.toISOString() })),
+    tasks: tasks_.map(t => ({ ...t, createdAt: t.createdAt.toISOString() })),
+  });
 });
 
 export default router;

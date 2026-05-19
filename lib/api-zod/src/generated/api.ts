@@ -71,6 +71,7 @@ export const ListContactsResponseItem = zod.object({
   "notes": zod.string().nullish(),
   "companyId": zod.number().nullish(),
   "companyName": zod.string().nullish(),
+  "recallDate": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListContactsResponse = zod.array(ListContactsResponseItem)
@@ -110,6 +111,7 @@ export const GetContactResponse = zod.object({
   "notes": zod.string().nullish(),
   "companyId": zod.number().nullish(),
   "companyName": zod.string().nullish(),
+  "recallDate": zod.string().nullish(),
   "createdAt": zod.string()
 })
 
@@ -131,7 +133,8 @@ export const UpdateContactBody = zod.object({
   "role": zod.string().nullish(),
   "status": zod.enum(['lead', 'prospect', 'client', 'churned']).optional(),
   "notes": zod.string().nullish(),
-  "companyId": zod.number().nullish()
+  "companyId": zod.number().nullish(),
+  "recallDate": zod.string().nullish()
 })
 
 export const UpdateContactResponse = zod.object({
@@ -144,6 +147,7 @@ export const UpdateContactResponse = zod.object({
   "notes": zod.string().nullish(),
   "companyId": zod.number().nullish(),
   "companyName": zod.string().nullish(),
+  "recallDate": zod.string().nullish(),
   "createdAt": zod.string()
 })
 

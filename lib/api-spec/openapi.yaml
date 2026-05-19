@@ -470,6 +470,8 @@ components:
           type: ["integer", "null"]
         companyName:
           type: ["string", "null"]
+        recallDate:
+          type: ["string", "null"]
         createdAt:
           type: string
 
@@ -513,6 +515,8 @@ components:
           type: ["string", "null"]
         companyId:
           type: ["integer", "null"]
+        recallDate:
+          type: ["string", "null"]
 
     # ── Company schemas ──────────────────────────────────────────────────────
     Company:
