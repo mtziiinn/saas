@@ -37,16 +37,17 @@ app.use(express.urlencoded({ extended: true }));
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+  max: 5,
+  message: { error: { code: "RATE_LIMITED", message: "Muitas tentativas. Tente novamente em 15 minutos." } },
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: true,
 });
 
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
-  message: { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+  max: 100,
+  message: { error: { code: "RATE_LIMITED", message: "Muitas requisições. Tente novamente em 15 minutos." } },
   standardHeaders: true,
   legacyHeaders: false,
 });
