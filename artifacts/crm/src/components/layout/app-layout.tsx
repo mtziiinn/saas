@@ -253,7 +253,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </span>
             </div>
           </div>
-          <div className="flex-1 max-w-[200px] ml-4">
+          <div className="flex-1 max-w-50 ml-4">
             <GlobalSearch />
           </div>
         </div>
@@ -269,7 +269,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       <main className="lg:pl-72 min-h-screen flex flex-col">
         {/* Desktop Header */}
-        <header className="hidden lg:flex h-16 border-b border-border items-center px-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-30">
+        <header className="hidden lg:flex h-16 border-b border-border items-center px-8 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-30">
           <div className="flex flex-1 items-center justify-between">
             <GlobalSearch />
           </div>

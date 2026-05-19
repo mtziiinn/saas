@@ -145,7 +145,7 @@ export default function Tasks() {
                 </div>
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Descrição</label>
-                  <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                  <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -224,13 +224,13 @@ export default function Tasks() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative flex-1 min-w-[200px] max-w-xs">
+          <div className="relative flex-1 min-w-50 max-w-xs">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Buscar agendamentos..." className="pl-9 bg-card" value={search} onChange={e => setSearch(e.target.value)} />
             {search && <X className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer" onClick={() => setSearch("")} />}
           </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[130px] bg-card">
+            <SelectTrigger className="w-32.5 bg-card">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -241,7 +241,7 @@ export default function Tasks() {
             </SelectContent>
           </Select>
           <Select value={filterPriority} onValueChange={setFilterPriority}>
-            <SelectTrigger className="w-[130px] bg-card">
+            <SelectTrigger className="w-32.5 bg-card">
               <SelectValue placeholder="Prioridade" />
             </SelectTrigger>
             <SelectContent>
@@ -252,7 +252,7 @@ export default function Tasks() {
             </SelectContent>
           </Select>
           <div className="relative">
-            <Input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} className="bg-card w-[150px]" />
+            <Input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} className="bg-card w-37.5" />
           </div>
           {(filterStatus !== "all" || filterPriority !== "all" || filterDate || debouncedSearch) && (
             <Button variant="ghost" size="sm" onClick={() => { setFilterStatus("all"); setFilterPriority("all"); setFilterDate(""); setSearch(""); }}>
@@ -288,7 +288,7 @@ export default function Tasks() {
                 <div key={task.id} className={`p-4 flex items-start gap-4 transition-colors hover:bg-muted/30 group ${task.status === 'done' ? 'opacity-60' : ''}`}>
                   <button 
                     onClick={() => handleToggle(task.id)}
-                    className="mt-1 flex-shrink-0 text-muted-foreground hover:text-primary transition-colors"
+                    className="mt-1 shrink-0 text-muted-foreground hover:text-primary transition-colors"
                   >
                     {task.status === 'done' ? (
                       <CheckCircle2 className="h-5 w-5 text-primary" />

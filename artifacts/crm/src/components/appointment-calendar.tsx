@@ -73,7 +73,7 @@ export function AppointmentCalendar({ appointments, onSelectDate }: Props) {
             <button
               key={key}
               onClick={() => onSelectDate?.(day)}
-              className={`min-h-[80px] p-1.5 text-left transition-colors hover:bg-muted/50 ${
+              className={`min-h-20 p-1.5 text-left transition-colors hover:bg-muted/50 ${
                 isCurrentMonth ? "bg-card" : "bg-muted/20"
               } ${isTodayDate ? "ring-2 ring-primary ring-inset" : ""}`}
             >
