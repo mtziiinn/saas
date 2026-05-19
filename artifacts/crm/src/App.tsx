@@ -13,22 +13,9 @@ import Tasks from "@/pages/tasks";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import NotFound from "@/pages/not-found";
+import Settings from "@/pages/settings";
 
 const queryClient = new QueryClient();
-
-function SettingsPlaceholder() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your account and preferences.</p>
-      </div>
-      <div className="border rounded-lg bg-card p-12 text-center text-muted-foreground">
-        Settings functionality coming soon.
-      </div>
-    </div>
-  );
-}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -37,8 +24,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="h-8 w-8 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold font-serif text-xl animate-pulse">
-          A
+        <div className="h-8 w-8 rounded bg-primary text-primary-foreground flex items-center justify-center text-xl animate-pulse">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 16.2c-1.1-1.1-1.1-3 0-4.1l6.6-6.6c1.1-1.1 3-1.1 4.1 0c1.1 1.1 1.1 3 0 4.1L13.5 9c-1.1 1.1-3 1.1-4.1 0"/><path d="M2 22c2.2-2.2 2.2-5.8 0-8"/><path d="M15 11c1.1 1.1 1.1 3 0 4.1l-1.5 1.5c-1.1 1.1-2.9 1.1-4 0"/><path d="M4 12h4"/></svg>
         </div>
       </div>
     );
@@ -67,7 +54,7 @@ function Router() {
               <Route path="/companies" component={Companies} />
               <Route path="/companies/:id" component={CompanyDetail} />
               <Route path="/tasks" component={Tasks} />
-              <Route path="/settings" component={SettingsPlaceholder} />
+              <Route path="/settings" component={Settings} />
               <Route component={NotFound} />
             </Switch>
           </AppLayout>

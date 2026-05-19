@@ -1,5 +1,5 @@
 import { useListTasks, useCompleteTask, getListTasksQueryKey, useDeleteTask, useCreateTask, useListContacts, useListCompanies } from "@workspace/api-client-react";
-import { Plus, Search, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Download, X } from "lucide-react";
+import { Plus, Search, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Download, X, List, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -7,11 +7,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format } from "date-fns";
+import { format, isSameDay, parseISO } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { AppointmentCalendar } from "@/components/appointment-calendar";
 
 export default function Tasks() {
   const [search, setSearch] = useState("");
@@ -26,15 +27,30 @@ export default function Tasks() {
   const { accessToken } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [view, setView] = useState<"list" | "calendar">("list");
+
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterPriority, setFilterPriority] = useState("all");
+  const [filterDate, setFilterDate] = useState("");
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(t);
   }, [search]);
 
-  const filteredTasks = tasks?.filter(t =>
-    !debouncedSearch || t.title.toLowerCase().includes(debouncedSearch.toLowerCase())
-  );
+  const filteredTasks = useMemo(() => {
+    if (!tasks) return [];
+    return tasks.filter(t => {
+      if (debouncedSearch && !t.title.toLowerCase().includes(debouncedSearch.toLowerCase())) return false;
+      if (filterStatus !== "all" && t.status !== filterStatus) return false;
+      if (filterPriority !== "all" && t.priority !== filterPriority) return false;
+      if (filterDate && t.dueDate) {
+        if (!isSameDay(parseISO(t.dueDate), parseISO(filterDate))) return false;
+      }
+      return true;
+    });
+  }, [tasks, debouncedSearch, filterStatus, filterPriority, filterDate]);
+
   const [form, setForm] = useState({ title: "", description: "", status: "pending", priority: "medium", dueDate: "", contactId: "", companyId: "" });
 
   function handleExport() {
@@ -44,7 +60,7 @@ export default function Tasks() {
       .then(blob => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href = url; a.download = "tasks.csv"; a.click();
+        a.href = url; a.download = "agendamentos.csv"; a.click();
         URL.revokeObjectURL(url);
       });
   }
@@ -94,6 +110,11 @@ export default function Tasks() {
     }
   };
 
+  function handleSelectCalendarDate(date: Date) {
+    setFilterDate(format(date, "yyyy-MM-dd"));
+    setView("list");
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -139,7 +160,7 @@ export default function Tasks() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Priority</label>
+                    <label className="text-sm font-medium">Prioridade</label>
                     <Select value={form.priority} onValueChange={v => setForm({ ...form, priority: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -158,7 +179,7 @@ export default function Tasks() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Paciente</label>
                     <Select value={form.contactId} onValueChange={v => setForm({ ...form, contactId: v })}>
-                      <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
                       <SelectContent>
                         {contacts?.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
                       </SelectContent>
@@ -167,7 +188,7 @@ export default function Tasks() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Clínica</label>
                     <Select value={form.companyId} onValueChange={v => setForm({ ...form, companyId: v })}>
-                      <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
                       <SelectContent>
                         {companies?.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
                       </SelectContent>
@@ -184,73 +205,128 @@ export default function Tasks() {
         </div>
       </div>
 
-      <div className="flex items-center space-x-2">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input           placeholder="Buscar agendamentos..." className="pl-9 bg-card" value={search} onChange={e => setSearch(e.target.value)} />
-          {search && <X className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer" onClick={() => setSearch("")} />}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div className="flex items-center gap-2 bg-card border rounded-lg p-1">
+          <button
+            onClick={() => setView("list")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-colors ${view === "list" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <List className="h-4 w-4" />
+            Lista
+          </button>
+          <button
+            onClick={() => setView("calendar")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-colors ${view === "calendar" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <CalendarDays className="h-4 w-4" />
+            Calendário
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative flex-1 min-w-[200px] max-w-xs">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar agendamentos..." className="pl-9 bg-card" value={search} onChange={e => setSearch(e.target.value)} />
+            {search && <X className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer" onClick={() => setSearch("")} />}
+          </div>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-[130px] bg-card">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="pending">Pendente</SelectItem>
+              <SelectItem value="in_progress">Em Andamento</SelectItem>
+              <SelectItem value="done">Concluído</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterPriority} onValueChange={setFilterPriority}>
+            <SelectTrigger className="w-[130px] bg-card">
+              <SelectValue placeholder="Prioridade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="low">Baixa</SelectItem>
+              <SelectItem value="medium">Média</SelectItem>
+              <SelectItem value="high">Alta</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="relative">
+            <Input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} className="bg-card w-[150px]" />
+          </div>
+          {(filterStatus !== "all" || filterPriority !== "all" || filterDate || debouncedSearch) && (
+            <Button variant="ghost" size="sm" onClick={() => { setFilterStatus("all"); setFilterPriority("all"); setFilterDate(""); setSearch(""); }}>
+              Limpar
+            </Button>
+          )}
         </div>
       </div>
 
-      <Card className="overflow-hidden border shadow-sm">
-        <div className="divide-y">
-          {isLoading ? (
-            Array(5).fill(0).map((_, i) => (
-              <div key={i} className="p-4 flex items-center gap-4">
-                <Skeleton className="h-5 w-5 rounded-full" />
-                <div className="space-y-2 flex-1">
-                  <Skeleton className="h-4 w-1/3" />
-                  <Skeleton className="h-3 w-1/4" />
-                </div>
-              </div>
-            ))
-          ) : tasks?.length === 0 ? (
-            <div className="p-12 text-center text-muted-foreground">
-              Nenhum agendamento encontrado.
-            </div>
-          ) : (
-            (filteredTasks ?? tasks)?.map((task) => (
-              <div key={task.id} className={`p-4 flex items-start gap-4 transition-colors hover:bg-muted/30 group ${task.status === 'done' ? 'opacity-60' : ''}`}>
-                <button 
-                  onClick={() => handleToggle(task.id)}
-                  className="mt-1 flex-shrink-0 text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {task.status === 'done' ? (
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
-                  ) : (
-                    <Circle className="h-5 w-5" />
-                  )}
-                </button>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className={`font-medium ${task.status === 'done' ? 'line-through' : ''}`}>
-                      {task.title}
-                    </p>
-                    <Badge variant="secondary" className={`text-[10px] uppercase px-1.5 py-0.5 ${getPriorityColor(task.priority)}`}>
-                      {task.priority}
-                    </Badge>
+      {view === "calendar" ? (
+        <Card className="overflow-hidden border shadow-sm p-4">
+          <AppointmentCalendar appointments={tasks || []} onSelectDate={handleSelectCalendarDate} />
+        </Card>
+      ) : (
+        <Card className="overflow-hidden border shadow-sm">
+          <div className="divide-y">
+            {isLoading ? (
+              Array(5).fill(0).map((_, i) => (
+                <div key={i} className="p-4 flex items-center gap-4">
+                  <Skeleton className="h-5 w-5 rounded-full" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-3 w-1/4" />
                   </div>
-                  <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                    {task.companyName && <span>{task.companyName}</span>}
-                    {task.contactName && <span>• {task.contactName}</span>}
-                    {task.dueDate && (
-                      <span className="flex items-center gap-1 text-xs">
-                        <Clock className="h-3 w-3" />
-                        {format(new Date(task.dueDate), "MMM d")}
-                      </span>
+                </div>
+              ))
+            ) : filteredTasks.length === 0 ? (
+              <div className="p-12 text-center text-muted-foreground">
+                Nenhum agendamento encontrado.
+              </div>
+            ) : (
+              filteredTasks.map((task) => (
+                <div key={task.id} className={`p-4 flex items-start gap-4 transition-colors hover:bg-muted/30 group ${task.status === 'done' ? 'opacity-60' : ''}`}>
+                  <button 
+                    onClick={() => handleToggle(task.id)}
+                    className="mt-1 flex-shrink-0 text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {task.status === 'done' ? (
+                      <CheckCircle2 className="h-5 w-5 text-primary" />
+                    ) : (
+                      <Circle className="h-5 w-5" />
                     )}
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className={`font-medium ${task.status === 'done' ? 'line-through' : ''}`}>
+                        {task.title}
+                      </p>
+                      <Badge variant="secondary" className={`text-[10px] uppercase px-1.5 py-0.5 ${getPriorityColor(task.priority)}`}>
+                        {task.priority}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                      {task.companyName && <span>{task.companyName}</span>}
+                      {task.contactName && <span>• {task.contactName}</span>}
+                      {task.dueDate && (
+                        <span className="flex items-center gap-1 text-xs">
+                          <Clock className="h-3 w-3" />
+                          {format(new Date(task.dueDate), "MMM d")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(task.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
                   </div>
                 </div>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(task.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </Card>
+              ))
+            )}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

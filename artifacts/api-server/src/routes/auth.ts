@@ -141,4 +141,56 @@ router.get("/auth/me", requireAuth, async (req, res) => {
   res.json({ user });
 });
 
+router.put("/auth/profile", requireAuth, async (req, res) => {
+  const { name } = req.body;
+  if (!name || typeof name !== "string" || !name.trim()) {
+    res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "Name is required" } });
+    return;
+  }
+
+  const [user] = await db
+    .update(usersTable)
+    .set({ name: name.trim(), updatedAt: new Date() })
+    .where(eq(usersTable.id, req.user!.userId))
+    .returning({ id: usersTable.id, name: usersTable.name, email: usersTable.email, role: usersTable.role });
+
+  if (!user) {
+    res.status(404).json({ error: { code: "USER_NOT_FOUND", message: "User not found" } });
+    return;
+  }
+
+  res.json({ user });
+});
+
+router.put("/auth/password", requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "Current password and new password are required" } });
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "New password must be at least 8 characters" } });
+    return;
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
+  if (!user) {
+    res.status(404).json({ error: { code: "USER_NOT_FOUND", message: "User not found" } });
+    return;
+  }
+
+  const valid = await bcrypt.compare(currentPassword, user.password);
+  if (!valid) {
+    res.status(401).json({ error: { code: "INVALID_PASSWORD", message: "Current password is incorrect" } });
+    return;
+  }
+
+  const hashed = await bcrypt.hash(newPassword, 12);
+  await db.update(usersTable).set({ password: hashed, updatedAt: new Date() }).where(eq(usersTable.id, user.id));
+
+  res.json({ message: "Password updated" });
+});
+
 export default router;

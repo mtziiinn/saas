@@ -1,9 +1,12 @@
 import { useGetDashboardStats, useGetRecentActivity, useGetUpcomingTasks, useGetContactsByStatus } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building2, CheckSquare, AlertCircle, Activity } from "lucide-react";
+import { Users, Building2, CheckSquare, AlertCircle, Activity, CalendarClock, UserPlus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
+import { format, isToday, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useMemo } from "react";
 
 export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useGetDashboardStats();
@@ -18,12 +21,17 @@ export default function Dashboard() {
     churned: "hsl(var(--muted-foreground))"
   };
 
+  const todayTasks = useMemo(() => {
+    if (!tasks) return [];
+    return tasks.filter(t => t.dueDate && isToday(parseISO(t.dueDate)));
+  }, [tasks]);
+
   const getStatusColor = (status: string) => STATUS_COLORS[status.toLowerCase()] || STATUS_COLORS.churned;
 
   const taskChartData = stats ? [
-    { name: "Done", count: stats.tasksDone, fill: "hsl(var(--primary))" },
-    { name: "Open", count: stats.totalTasks - stats.tasksDone, fill: "hsl(var(--muted-foreground))" },
-    { name: "Overdue", count: stats.tasksOverdue, fill: "hsl(var(--destructive))" },
+    { name: "Concluídos", count: stats.tasksDone, fill: "hsl(var(--primary))" },
+    { name: "Abertos", count: stats.totalTasks - stats.tasksDone, fill: "hsl(var(--muted-foreground))" },
+    { name: "Atrasados", count: stats.tasksOverdue, fill: "hsl(var(--destructive))" },
   ] : [];
 
   return (
@@ -83,6 +91,75 @@ export default function Dashboard() {
         </div>
       ) : null}
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CalendarClock className="h-5 w-5 text-primary" />
+              Agendamentos de Hoje
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {tasksLoading ? (
+              <Skeleton className="h-20 w-full" />
+            ) : todayTasks.length > 0 ? (
+              <div className="space-y-3">
+                {todayTasks.map(task => (
+                  <div key={task.id} className="flex items-start justify-between border-b last:border-0 pb-3 last:pb-0">
+                    <div>
+                      <p className="font-medium text-sm">{task.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {task.contactName || task.companyName || "Sem vínculo"}
+                      </p>
+                    </div>
+                    <Badge variant="secondary" className={`text-[10px] uppercase ${task.priority === 'high' ? 'bg-destructive/10 text-destructive' : task.priority === 'medium' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
+                      {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground py-4 text-center">Nenhum agendamento para hoje.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <UserPlus className="h-5 w-5 text-primary" />
+              Pacientes Recentes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {activitiesLoading ? (
+              <Skeleton className="h-20 w-full" />
+            ) : activities ? (
+              <div className="space-y-3">
+                {activities.filter(a => a.type === 'contact_created').slice(0, 5).map(activity => (
+                  <div key={activity.id} className="flex items-center gap-3 border-b last:border-0 pb-3 last:pb-0">
+                    <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium">
+                      <UserPlus className="h-3 w-3" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm truncate">{activity.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(activity.createdAt), "d 'de' MMM", { locale: ptBR })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {activities.filter(a => a.type === 'contact_created').length === 0 && (
+                  <p className="text-sm text-muted-foreground py-4 text-center">Nenhum paciente novo recentemente.</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground py-4 text-center">Nenhum paciente novo recentemente.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card>
           <CardHeader>
@@ -109,10 +186,10 @@ export default function Dashboard() {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value, name) => [value, String(name).charAt(0).toUpperCase() + String(name).slice(1)]} 
+                    formatter={(value, name) => [value, name === "lead" ? "Potencial" : name === "prospect" ? "Agendado" : name === "client" ? "Ativo" : name === "churned" ? "Inativo" : String(name).charAt(0).toUpperCase() + String(name).slice(1)]} 
                     contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))' }}
                   />
-                  <Legend formatter={(value) => value.charAt(0).toUpperCase() + value.slice(1)} />
+                  <Legend formatter={(value) => value === "lead" ? "Potencial" : value === "prospect" ? "Agendado" : value === "client" ? "Ativo" : value === "churned" ? "Inativo" : value.charAt(0).toUpperCase() + value.slice(1)} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -190,7 +267,7 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" />
-              Recent Activity
+              Atividade Recente
             </CardTitle>
           </CardHeader>
           <CardContent>
