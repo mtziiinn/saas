@@ -1,5 +1,5 @@
 import { useListTasks, useCompleteTask, getListTasksQueryKey, useDeleteTask, useCreateTask, useListContacts, useListCompanies } from "@workspace/api-client-react";
-import { Plus, Search, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Download } from "lucide-react";
+import { Plus, Search, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -9,10 +9,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Tasks() {
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const { data: tasks, isLoading } = useListTasks();
   const { data: contacts } = useListContacts();
   const { data: companies } = useListCompanies();
@@ -21,7 +24,17 @@ export default function Tasks() {
   const createMutation = useCreateTask();
   const queryClient = useQueryClient();
   const { accessToken } = useAuth();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const filteredTasks = tasks?.filter(t =>
+    !debouncedSearch || t.title.toLowerCase().includes(debouncedSearch.toLowerCase())
+  );
   const [form, setForm] = useState({ title: "", description: "", status: "pending", priority: "medium", dueDate: "", contactId: "", companyId: "" });
 
   function handleExport() {
@@ -45,6 +58,7 @@ export default function Tasks() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
           queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+          toast({ title: "Task created" });
           setOpen(false);
           setForm({ title: "", description: "", status: "pending", priority: "medium", dueDate: "", contactId: "", companyId: "" });
         },
@@ -173,7 +187,8 @@ export default function Tasks() {
       <div className="flex items-center space-x-2">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search tasks..." className="pl-9 bg-card" />
+          <Input placeholder="Search tasks..." className="pl-9 bg-card" value={search} onChange={e => setSearch(e.target.value)} />
+          {search && <X className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer" onClick={() => setSearch("")} />}
         </div>
       </div>
 
@@ -194,7 +209,7 @@ export default function Tasks() {
               No tasks found.
             </div>
           ) : (
-            tasks?.map((task) => (
+            (filteredTasks ?? tasks)?.map((task) => (
               <div key={task.id} className={`p-4 flex items-start gap-4 transition-colors hover:bg-muted/30 group ${task.status === 'done' ? 'opacity-60' : ''}`}>
                 <button 
                   onClick={() => handleToggle(task.id)}

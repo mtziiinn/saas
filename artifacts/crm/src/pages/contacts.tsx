@@ -1,6 +1,6 @@
 import { useListContacts, useCreateContact, getListContactsQueryKey, useListCompanies } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { Plus, Search, Download } from "lucide-react";
+import { Plus, Search, Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -8,18 +8,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Contacts() {
-  const { data: contacts, isLoading } = useListContacts();
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { data: contacts, isLoading } = useListContacts(search ? { search: debouncedSearch } : undefined);
   const { data: companies } = useListCompanies();
   const createMutation = useCreateContact();
   const queryClient = useQueryClient();
   const { accessToken } = useAuth();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", role: "", status: "lead", notes: "", companyId: "" });
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   function handleExport() {
     if (!accessToken) return;
@@ -41,6 +50,8 @@ export default function Contacts() {
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListContactsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+          toast({ title: "Contact created" });
           setOpen(false);
           setForm({ name: "", email: "", phone: "", role: "", status: "lead", notes: "", companyId: "" });
         },
@@ -138,7 +149,8 @@ export default function Contacts() {
       <div className="flex items-center space-x-2">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search contacts..." className="pl-9 bg-card" />
+          <Input placeholder="Search contacts..." className="pl-9 bg-card" value={search} onChange={e => setSearch(e.target.value)} />
+          {search && <X className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer" onClick={() => setSearch("")} />}
         </div>
       </div>
 

@@ -1,10 +1,15 @@
-import { useGetCompany, getGetCompanyQueryKey, useDeleteCompany } from "@workspace/api-client-react";
+import { useGetCompany, getGetCompanyQueryKey, useDeleteCompany, useUpdateCompany, useListCompanies } from "@workspace/api-client-react";
 import { useRoute, useLocation, Link } from "wouter";
 import { ArrowLeft, Globe, Briefcase, Trash2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,6 +19,7 @@ export default function CompanyDetail() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const { data: company, isLoading } = useGetCompany(id, {
     query: {
@@ -23,6 +29,7 @@ export default function CompanyDetail() {
   });
 
   const deleteMutation = useDeleteCompany();
+  const updateMutation = useUpdateCompany();
 
   const handleDelete = () => {
     if (confirm("Are you sure you want to delete this company?")) {
@@ -34,6 +41,25 @@ export default function CompanyDetail() {
         }
       });
     }
+  };
+
+  const handleUpdate = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      name: formData.get("name") as string,
+      website: formData.get("website") as string,
+      industry: formData.get("industry") as string,
+      size: formData.get("size") as string,
+      notes: formData.get("notes") as string,
+    };
+    updateMutation.mutate({ id, data }, {
+      onSuccess: () => {
+        toast({ title: "Company updated" });
+        queryClient.invalidateQueries({ queryKey: getGetCompanyQueryKey(id) });
+        setIsEditOpen(false);
+      }
+    });
   };
 
   if (isLoading) {
@@ -66,9 +92,47 @@ export default function CompanyDetail() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
-            <Edit className="h-4 w-4" /> Edit
-          </Button>
+          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Edit className="h-4 w-4" /> Edit
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Company</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleUpdate} className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" name="name" defaultValue={company?.name} required />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="website">Website</Label>
+                    <Input id="website" name="website" defaultValue={company?.website || ""} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="industry">Industry</Label>
+                    <Input id="industry" name="industry" defaultValue={company?.industry || ""} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="size">Size</Label>
+                  <Input id="size" name="size" defaultValue={company?.size || ""} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea id="notes" name="notes" defaultValue={company?.notes || ""} rows={4} />
+                </div>
+                <div className="flex justify-end pt-2">
+                  <Button type="submit" disabled={updateMutation.isPending}>
+                    {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
           <Button variant="destructive" className="gap-2" onClick={handleDelete}>
             <Trash2 className="h-4 w-4" /> Delete
           </Button>

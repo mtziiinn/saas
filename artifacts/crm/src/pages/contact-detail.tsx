@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetContact, getGetContactQueryKey, useDeleteContact, useUpdateContact, useListTasks, getListTasksQueryKey, useGetRecentActivity } from "@workspace/api-client-react";
+import { useGetContact, getGetContactQueryKey, useDeleteContact, useUpdateContact, useListTasks, getListTasksQueryKey, useGetRecentActivity, useListCompanies } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
 import { ArrowLeft, Building2, Mail, Phone, Briefcase, Trash2, Edit, CheckCircle2, Circle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,8 @@ export default function ContactDetail() {
   const { toast } = useToast();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const { data: companies } = useListCompanies();
 
   const { data: contact, isLoading } = useGetContact(id, {
     query: {
@@ -58,6 +60,7 @@ export default function ContactDetail() {
   const handleUpdate = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    const companyId = formData.get("companyId") as string;
     const data = {
       name: formData.get("name") as string,
       email: formData.get("email") as string,
@@ -65,6 +68,7 @@ export default function ContactDetail() {
       role: formData.get("role") as string,
       status: formData.get("status") as any,
       notes: formData.get("notes") as string,
+      companyId: companyId ? Number(companyId) : null,
     };
     
     updateMutation.mutate({ id, data }, {
@@ -160,6 +164,17 @@ export default function ContactDetail() {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="companyId">Company</Label>
+                  <Select name="companyId" defaultValue={contact.companyId ? String(contact.companyId) : ""}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="None" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {companies?.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notes</Label>

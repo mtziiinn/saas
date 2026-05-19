@@ -1,20 +1,29 @@
 import { useListCompanies, useCreateCompany, getListCompaniesQueryKey } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { Plus, Search, Building2, Users } from "lucide-react";
+import { Plus, Search, Building2, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Companies() {
-  const { data: companies, isLoading } = useListCompanies();
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { data: companies, isLoading } = useListCompanies(search ? { search: debouncedSearch } : undefined);
   const createMutation = useCreateCompany();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", website: "", industry: "", size: "", notes: "" });
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,6 +33,8 @@ export default function Companies() {
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListCompaniesQueryKey() });
+          queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+          toast({ title: "Company created" });
           setOpen(false);
           setForm({ name: "", website: "", industry: "", size: "", notes: "" });
         },
@@ -84,7 +95,8 @@ export default function Companies() {
       <div className="flex items-center space-x-2">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search companies..." className="pl-9 bg-card" />
+          <Input placeholder="Search companies..." className="pl-9 bg-card" value={search} onChange={e => setSearch(e.target.value)} />
+          {search && <X className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer" onClick={() => setSearch("")} />}
         </div>
       </div>
 
