@@ -6,3 +6,4 @@ export * from "./users";
 export * from "./treatment-plans";
 export * from "./financial";
 export * from "./notifications";
+export * from "./attachments";

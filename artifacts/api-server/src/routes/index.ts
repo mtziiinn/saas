@@ -11,6 +11,7 @@ import treatmentPlansRouter from "./treatment-plans";
 import financialRouter from "./financial";
 import notificationsRouter from "./notifications";
 import patientPortalRouter from "./patient-portal";
+import attachmentsRouter from "./attachments";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(dashboardRouter);
 router.use(treatmentPlansRouter);
 router.use(financialRouter);
 router.use(notificationsRouter);
+router.use("/attachments", attachmentsRouter);
 
 export default router;
