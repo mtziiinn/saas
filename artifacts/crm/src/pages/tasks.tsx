@@ -1,5 +1,5 @@
 import { useListTasks, useCompleteTask, getListTasksQueryKey, useDeleteTask, useCreateTask, useListContacts, useListCompanies } from "@workspace/api-client-react";
-import { Plus, Search, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Download, X, List, CalendarDays } from "lucide-react";
+import { Plus, Search, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Download, X, List, CalendarDays, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -108,6 +108,28 @@ export default function Tasks() {
       });
     }
   };
+
+  async function sendReminder(task: any) {
+    if (!task.contactId) {
+      toast({ title: "Paciente não vinculado", description: "Vincule um paciente ao agendamento para enviar lembrete." });
+      return;
+    }
+    try {
+      await fetch("/api/notifications/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({
+          contactId: task.contactId,
+          taskId: task.id,
+          type: "email",
+          message: `Lembrete: ${task.title} em ${task.dueDate ? format(parseISO(task.dueDate), "dd/MM/yyyy") : "breve"}.`,
+        }),
+      });
+      toast({ title: "Lembrete enviado com sucesso!" });
+    } catch {
+      toast({ title: "Erro ao enviar lembrete", variant: "destructive" });
+    }
+  }
 
   const getPriorityColor = (priority: string) => {
     switch(priority) {
@@ -324,7 +346,10 @@ export default function Tasks() {
                       )}
                     </div>
                   </div>
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                    <Button variant="ghost" size="icon" onClick={() => sendReminder(task)} title="Enviar lembrete">
+                      <Bell className="h-4 w-4 text-primary" />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(task.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>

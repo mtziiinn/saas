@@ -1,14 +1,19 @@
 import { useGetDashboardStats, useGetRecentActivity, useGetUpcomingTasks, useGetContactsByStatus } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building2, CheckSquare, AlertCircle, Activity, CalendarClock, UserPlus, TrendingUp, TrendingDown } from "lucide-react";
+import { Users, Building2, CheckSquare, AlertCircle, Activity, CalendarClock, UserPlus, TrendingUp, TrendingDown, Bell } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
 import { useMemo } from "react";
 
 export default function Dashboard() {
+  const { toast } = useToast();
+  const { accessToken } = useAuth();
   const { data: stats, isLoading: statsLoading } = useGetDashboardStats();
   const { data: activities, isLoading: activitiesLoading } = useGetRecentActivity();
   const { data: tasks, isLoading: tasksLoading } = useGetUpcomingTasks();
@@ -25,6 +30,28 @@ export default function Dashboard() {
     if (!tasks) return [];
     return tasks.filter(t => t.dueDate && isToday(parseISO(t.dueDate)));
   }, [tasks]);
+
+  async function sendReminder(task: any) {
+    if (!task.contactId) {
+      toast({ title: "Paciente não vinculado", description: "Vincule um paciente ao agendamento para enviar lembrete." });
+      return;
+    }
+    try {
+      await fetch("/api/notifications/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({
+          contactId: task.contactId,
+          taskId: task.id,
+          type: "email",
+          message: `Lembrete: ${task.title} em ${task.dueDate ? format(parseISO(task.dueDate), "dd/MM/yyyy") : "breve"}.`,
+        }),
+      });
+      toast({ title: "Lembrete enviado com sucesso!" });
+    } catch {
+      toast({ title: "Erro ao enviar lembrete", variant: "destructive" });
+    }
+  }
 
   const getStatusColor = (status: string) => STATUS_COLORS[status.toLowerCase()] || STATUS_COLORS.churned;
 
@@ -105,16 +132,21 @@ export default function Dashboard() {
             ) : todayTasks.length > 0 ? (
               <div className="space-y-3">
                 {todayTasks.map(task => (
-                  <div key={task.id} className="flex items-start justify-between border-b last:border-0 pb-3 last:pb-0">
+                  <div key={task.id} className="flex items-start justify-between gap-2 border-b last:border-0 pb-3 last:pb-0">
                     <div>
                       <p className="font-medium text-sm">{task.title}</p>
                       <p className="text-xs text-muted-foreground">
                         {task.contactName || task.companyName || "Sem vínculo"}
                       </p>
                     </div>
-                    <Badge variant="secondary" className={`text-[10px] uppercase ${task.priority === 'high' ? 'bg-destructive/10 text-destructive' : task.priority === 'medium' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
-                      {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
-                    </Badge>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button onClick={() => sendReminder(task)} title="Enviar lembrete" className="text-muted-foreground hover:text-primary transition-colors">
+                        <Bell className="h-4 w-4" />
+                      </button>
+                      <Badge variant="secondary" className={`text-[10px] uppercase ${task.priority === 'high' ? 'bg-destructive/10 text-destructive' : task.priority === 'medium' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
+                        {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
+                      </Badge>
+                    </div>
                   </div>
                 ))}
               </div>

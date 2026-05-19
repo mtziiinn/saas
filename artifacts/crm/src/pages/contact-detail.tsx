@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useGetContact, getGetContactQueryKey, useDeleteContact, useUpdateContact, useListTasks, getListTasksQueryKey, useGetRecentActivity, useListCompanies } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, Building2, Mail, Phone, Briefcase, Trash2, Edit, CheckCircle2, Circle, Clock, CalendarClock, FileText, Stethoscope, Activity, DollarSign, TrendingUp, TrendingDown, ExternalLink, Copy } from "lucide-react";
+import { ArrowLeft, Building2, Mail, Phone, Briefcase, Trash2, Edit, CheckCircle2, Circle, Clock, CalendarClock, FileText, Stethoscope, Activity, DollarSign, TrendingUp, TrendingDown, ExternalLink, Copy, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,7 @@ export default function ContactDetail() {
   const [finances, setFinances] = useState<any>(null);
   const [portalToken, setPortalToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   const { data: companies } = useListCompanies();
 
@@ -87,6 +88,14 @@ export default function ContactDetail() {
     fetch(`/api/contacts/${id}/portal-token`, { headers: { Authorization: `Bearer ${accessToken}` } })
       .then(r => r.ok ? r.json() : null)
       .then(d => setPortalToken(d?.patientToken || null))
+      .catch(() => {});
+  }, [id, accessToken]);
+
+  useEffect(() => {
+    if (!accessToken || !id) return;
+    fetch(`/api/notifications?contactId=${id}`, { headers: { Authorization: `Bearer ${accessToken}` } })
+      .then(r => r.json())
+      .then(setNotifications)
       .catch(() => {});
   }, [id, accessToken]);
 
@@ -468,6 +477,36 @@ export default function ContactDetail() {
               </CardContent>
             </Card>
           )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-primary" />
+                Notificações
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {notifications.length > 0 ? (
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {notifications.map(n => (
+                    <div key={n.id} className="flex items-start gap-2 text-sm border-b last:border-0 pb-2 last:pb-0">
+                      <Bell className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate">{n.message}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{n.channel === "simulado" ? "Simulado" : n.channel}</span>
+                          <span>•</span>
+                          <span>{format(new Date(n.createdAt), "dd/MM/yyyy HH:mm")}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-2">Nenhuma notificação enviada.</p>
+              )}
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>
