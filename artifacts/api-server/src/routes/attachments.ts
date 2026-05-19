@@ -29,13 +29,21 @@ router.post("/upload", async (req, res) => {
         const { entityType, entityId } = payload;
 
         if (!entityType || !entityId) {
-          throw new Error("entityType and entityId are required in clientPayload");
+          throw new Error(
+            "entityType and entityId are required in clientPayload",
+          );
         }
 
         return {
-          allowedContentTypes: ["image/jpeg", "image/png", "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+          allowedContentTypes: [
+            "image/jpeg",
+            "image/png",
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          ],
           tokenPayload: JSON.stringify({
-            userId: req.user.id,
+            userId: req.user.userId,
             entityType,
             entityId,
           }),
@@ -44,7 +52,9 @@ router.post("/upload", async (req, res) => {
       onUploadCompleted: async ({ blob, tokenPayload }) => {
         // 🛡️ Este código roda no backend após o upload ser concluído com sucesso no Vercel
         try {
-          const { userId, entityType, entityId } = JSON.parse(tokenPayload || "{}");
+          const { userId, entityType, entityId } = JSON.parse(
+            tokenPayload || "{}",
+          );
 
           await db.insert(attachmentsTable).values({
             filename: blob.url, // URL final do blob
@@ -79,7 +89,9 @@ router.get("/", async (req, res) => {
   const { entityType, entityId } = req.query;
 
   if (!entityType || !entityId) {
-    return res.status(400).json({ error: "entityType and entityId are required" });
+    return res
+      .status(400)
+      .json({ error: "entityType and entityId are required" });
   }
 
   try {
@@ -91,7 +103,10 @@ router.get("/", async (req, res) => {
       filters.push(eq(attachmentsTable.companyId, Number(entityId)));
     }
 
-    const docs = await db.select().from(attachmentsTable).where(and(...filters));
+    const docs = await db
+      .select()
+      .from(attachmentsTable)
+      .where(and(...filters));
     return res.json(docs);
   } catch (error) {
     logger.error({ error }, "Error listing attachments");
@@ -107,7 +122,10 @@ router.delete("/:id", async (req, res) => {
 
   try {
     // 🛡️ No futuro: Adicionar verificação se o usuário tem permissão para deletar este arquivo específico
-    const [deleted] = await db.delete(attachmentsTable).where(eq(attachmentsTable.id, id)).returning();
+    const [deleted] = await db
+      .delete(attachmentsTable)
+      .where(eq(attachmentsTable.id, id))
+      .returning();
 
     if (!deleted) {
       return res.status(404).json({ error: "Attachment not found" });
