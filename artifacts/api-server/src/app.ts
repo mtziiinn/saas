@@ -31,7 +31,7 @@ app.use(
     },
   }),
 );
-app.use(cors({ origin: process.env["CORS_ORIGIN"] || true, credentials: true }));
+app.use(cors({ origin: process.env["CORS_ORIGIN"] || "https://saas-crm-two.vercel.app", credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -2,11 +2,20 @@
 import { db } from "@workspace/db";
 import { contactsTable, tasksTable, treatmentPlansTable, treatmentProceduresTable, financialTransactionsTable } from "@workspace/db";
 import { eq, sql, inArray } from "drizzle-orm";
+import rateLimit from "express-rate-limit";
 
 const router = Router();
 
-router.get("/patient-portal/:token", async (req, res) => {
-  const { token } = req.params;
+const portalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { error: { code: "RATE_LIMITED", message: "Muitas requisições. Tente novamente em 15 minutos." } },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.get("/patient-portal/:token", portalLimiter, async (req, res) => {
+  const token = req.params.token as string;
   if (!token || token.length < 10) {
     res.status(400).json({ error: { code: "INVALID_TOKEN", message: "Invalid token" } });
     return;
