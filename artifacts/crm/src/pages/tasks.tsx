@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { AppointmentCalendar } from "@/components/appointment-calendar";
 
 export default function Tasks() {
@@ -82,11 +83,18 @@ export default function Tasks() {
     );
   }
 
+  const [, navigate] = useLocation();
+
   const handleToggle = (id: number) => {
     completeMutation.mutate({ id }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+        toast({
+          title: "Consulta concluída",
+          description: "Criar uma receita no Financeiro?",
+          action: <Button variant="outline" size="sm" onClick={() => navigate("/financial")}>Ir para Financeiro</Button>,
+        });
       }
     });
   };

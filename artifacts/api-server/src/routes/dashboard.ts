@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { contactsTable, companiesTable, tasksTable, activityLogTable } from "@workspace/db";
+import { contactsTable, companiesTable, tasksTable, activityLogTable, financialTransactionsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 
@@ -35,6 +35,12 @@ router.get("/dashboard/stats", async (req, res) => {
         .where(sql`created_at >= ${startOfMonth}`),
     ]);
 
+  const allTx = await db.select().from(financialTransactionsTable);
+  const monthTx = allTx.filter(t => new Date(t.date) >= new Date(startOfMonth));
+
+  const monthIncome = monthTx.filter(t => t.type === "income" && t.status === "paid").reduce((s, t) => s + Number(t.amount), 0);
+  const monthExpense = monthTx.filter(t => t.type === "expense" && t.status === "paid").reduce((s, t) => s + Number(t.amount), 0);
+
   res.json({
     totalContacts: totalContacts.count,
     totalCompanies: totalCompanies.count,
@@ -43,6 +49,8 @@ router.get("/dashboard/stats", async (req, res) => {
     tasksOverdue: tasksOverdue.count,
     tasksDone: tasksDone.count,
     newContactsThisMonth: newContactsThisMonth.count,
+    monthIncome,
+    monthExpense,
   });
 });
 

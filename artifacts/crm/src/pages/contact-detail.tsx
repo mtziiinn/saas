@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useGetContact, getGetContactQueryKey, useDeleteContact, useUpdateContact, useListTasks, getListTasksQueryKey, useGetRecentActivity, useListCompanies } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, Building2, Mail, Phone, Briefcase, Trash2, Edit, CheckCircle2, Circle, Clock, CalendarClock, FileText, Stethoscope, Activity } from "lucide-react";
+import { ArrowLeft, Building2, Mail, Phone, Briefcase, Trash2, Edit, CheckCircle2, Circle, Clock, CalendarClock, FileText, Stethoscope, Activity, DollarSign, TrendingUp, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,7 @@ export default function ContactDetail() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [recallDate, setRecallDate] = useState("");
   const [timelineItems, setTimelineItems] = useState<any[]>([]);
+  const [finances, setFinances] = useState<any>(null);
 
   const { data: companies } = useListCompanies();
 
@@ -68,6 +69,14 @@ export default function ContactDetail() {
         items.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setTimelineItems(items);
       })
+      .catch(() => {});
+  }, [id, accessToken]);
+
+  useEffect(() => {
+    if (!accessToken || !id) return;
+    fetch(`/api/contacts/${id}/finances`, { headers: { Authorization: `Bearer ${accessToken}` } })
+      .then(r => r.json())
+      .then(setFinances)
       .catch(() => {});
   }, [id, accessToken]);
 
@@ -344,6 +353,48 @@ export default function ContactDetail() {
                   <FileText className="h-4 w-4" /> Ver Planos
                 </Button>
               </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-primary" />
+                Financeiro
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {finances ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Saldo</span>
+                    <span className={`font-semibold ${finances.balance >= 0 ? "text-green-600" : "text-destructive"}`}>
+                      R$ {finances.balance.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Total Recebido</span>
+                    <span className="font-semibold text-green-600">R$ {finances.totalIncome.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Total Gasto</span>
+                    <span className="font-semibold text-destructive">R$ {finances.totalExpense.toFixed(2)}</span>
+                  </div>
+                  {finances.pendingIncome > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">A Receber</span>
+                      <Badge variant="secondary">R$ {finances.pendingIncome.toFixed(2)}</Badge>
+                    </div>
+                  )}
+                  <Link href="/financial">
+                    <Button variant="outline" size="sm" className="w-full gap-2 mt-1">
+                      <DollarSign className="h-4 w-4" /> Ver Transações
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Carregando...</p>
+              )}
             </CardContent>
           </Card>
 

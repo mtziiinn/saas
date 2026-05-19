@@ -237,6 +237,8 @@ export interface DashboardStats {
   tasksOverdue: number;
   tasksDone: number;
   newContactsThisMonth: number;
+  monthIncome?: number;
+  monthExpense?: number;
 }
 
 export type ActivityItemType = typeof ActivityItemType[keyof typeof ActivityItemType];

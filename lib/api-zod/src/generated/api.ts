@@ -392,7 +392,9 @@ export const GetDashboardStatsResponse = zod.object({
   "tasksDueToday": zod.number(),
   "tasksOverdue": zod.number(),
   "tasksDone": zod.number(),
-  "newContactsThisMonth": zod.number()
+  "newContactsThisMonth": zod.number(),
+  "monthIncome": zod.number().optional(),
+  "monthExpense": zod.number().optional()
 })
 
 

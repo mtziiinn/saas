@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { contactsTable, companiesTable, tasksTable } from "@workspace/db";
+import { contactsTable, companiesTable, tasksTable, financialTransactionsTable } from "@workspace/db";
 import { activityLogTable } from "@workspace/db";
 import { eq, ilike, and, sql } from "drizzle-orm";
 import {
@@ -181,6 +181,22 @@ router.delete("/contacts/:id", async (req, res) => {
   res.status(204).send();
 });
 
+router.get("/contacts/:id/finances", async (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const all = await db
+    .select()
+    .from(financialTransactionsTable)
+    .where(eq(financialTransactionsTable.contactId, id));
+
+  const totalIncome = all.filter(t => t.type === "income" && t.status === "paid").reduce((s, t) => s + Number(t.amount), 0);
+  const totalExpense = all.filter(t => t.type === "expense" && t.status === "paid").reduce((s, t) => s + Number(t.amount), 0);
+  const pendingIncome = all.filter(t => t.type === "income" && t.status === "pending").reduce((s, t) => s + Number(t.amount), 0);
+
+  res.json({ balance: totalIncome - totalExpense, totalIncome, totalExpense, pendingIncome, totalTransactions: all.length });
+});
+
 router.get("/contacts/:id/timeline", async (req, res) => {
   const id = Number(req.params.id);
   if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
@@ -204,9 +220,24 @@ router.get("/contacts/:id/timeline", async (req, res) => {
     .where(eq(tasksTable.contactId, id))
     .orderBy(sql`${tasksTable.createdAt} desc`);
 
+  const transactions = await db
+    .select({
+      id: financialTransactionsTable.id,
+      description: financialTransactionsTable.description,
+      amount: financialTransactionsTable.amount,
+      type: financialTransactionsTable.type,
+      status: financialTransactionsTable.status,
+      date: financialTransactionsTable.date,
+      createdAt: financialTransactionsTable.createdAt,
+    })
+    .from(financialTransactionsTable)
+    .where(eq(financialTransactionsTable.contactId, id))
+    .orderBy(sql`${financialTransactionsTable.createdAt} desc`);
+
   res.json({
     activities: activities.map(a => ({ ...a, createdAt: a.createdAt.toISOString() })),
     tasks: tasks_.map(t => ({ ...t, createdAt: t.createdAt.toISOString() })),
+    transactions: transactions.map(tx => ({ ...tx, date: tx.date.toISOString(), createdAt: tx.createdAt.toISOString() })),
   });
 });
 

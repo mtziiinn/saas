@@ -663,6 +663,10 @@ components:
           type: integer
         newContactsThisMonth:
           type: integer
+        monthIncome:
+          type: number
+        monthExpense:
+          type: number
 
     ActivityItem:
       type: object

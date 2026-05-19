@@ -14,4 +14,6 @@ export interface DashboardStats {
   tasksOverdue: number;
   tasksDone: number;
   newContactsThisMonth: number;
+  monthIncome?: number;
+  monthExpense?: number;
 }

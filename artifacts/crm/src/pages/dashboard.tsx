@@ -1,6 +1,6 @@
 import { useGetDashboardStats, useGetRecentActivity, useGetUpcomingTasks, useGetContactsByStatus } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building2, CheckSquare, AlertCircle, Activity, CalendarClock, UserPlus } from "lucide-react";
+import { Users, Building2, CheckSquare, AlertCircle, Activity, CalendarClock, UserPlus, TrendingUp, TrendingDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -227,6 +227,45 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Financeiro do Mês
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {statsLoading ? (
+              <Skeleton className="h-32 w-full" />
+            ) : stats ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-950/20">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-green-600" />
+                    <span className="text-sm font-medium">Receitas</span>
+                  </div>
+                  <span className="text-lg font-bold text-green-600">R$ {Number(stats.monthIncome || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-red-50 dark:bg-red-950/20">
+                  <div className="flex items-center gap-2">
+                    <TrendingDown className="h-4 w-4 text-destructive" />
+                    <span className="text-sm font-medium">Despesas</span>
+                  </div>
+                  <span className="text-lg font-bold text-destructive">R$ {Number(stats.monthExpense || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/10">
+                  <span className="text-sm font-medium">Saldo do Mês</span>
+                  <span className={`text-lg font-bold ${Number(stats.monthIncome || 0) - Number(stats.monthExpense || 0) >= 0 ? "text-green-600" : "text-destructive"}`}>
+                    R$ {(Number(stats.monthIncome || 0) - Number(stats.monthExpense || 0)).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground py-8 text-center">Sem dados financeiros</p>
+            )}
+          </CardContent>
+        </Card>
+
         <Card className="col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

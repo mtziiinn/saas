@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { treatmentPlansTable, treatmentProceduresTable, contactsTable } from "@workspace/db";
+import { treatmentPlansTable, treatmentProceduresTable, contactsTable, financialTransactionsTable } from "@workspace/db";
 import { activityLogTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
@@ -83,6 +83,19 @@ router.post("/treatment-plans", async (req, res) => {
     entityId: plan.id,
     entityName: plan.title,
   });
+
+  if (Number(totalValue) > 0) {
+    await db.insert(financialTransactionsTable).values({
+      description: `Plano: ${plan.title}`,
+      type: "income",
+      category: "procedimento",
+      amount: String(totalValue),
+      date: new Date(),
+      status: "pending",
+      contactId,
+      treatmentPlanId: plan.id,
+    });
+  }
 
   const proceduresList = await db
     .select()

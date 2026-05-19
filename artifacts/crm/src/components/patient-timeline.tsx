@@ -1,9 +1,9 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Activity, CalendarClock, FileText } from "lucide-react";
+import { Activity, CalendarClock, FileText, DollarSign } from "lucide-react";
 
 interface TimelineItem {
-  type: "activity" | "task" | "treatment";
+  type: "activity" | "task" | "treatment" | "transaction";
   id: number;
   title: string;
   description?: string;
@@ -18,12 +18,14 @@ const iconMap = {
   activity: Activity,
   task: CalendarClock,
   treatment: FileText,
+  transaction: DollarSign,
 };
 
 const colorMap = {
   activity: "bg-primary",
   task: "bg-chart-2",
   treatment: "bg-chart-3",
+  transaction: "bg-green-500",
 } as Record<string, string>;
 
 export function PatientTimeline({ items }: Props) {
