@@ -183,6 +183,17 @@ router.delete("/contacts/:id", async (req, res) => {
   res.status(204).send();
 });
 
+router.get("/contacts/:id/portal-token", async (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+  const [contact] = await db
+    .select({ patientToken: contactsTable.patientToken, name: contactsTable.name })
+    .from(contactsTable)
+    .where(eq(contactsTable.id, id));
+  if (!contact) { res.status(404).json({ error: "Not found" }); return; }
+  res.json(contact);
+});
+
 router.get("/contacts/:id/finances", async (req, res) => {
   const id = Number(req.params.id);
   if (!id) { res.status(400).json({ error: "Invalid id" }); return; }

@@ -57,7 +57,7 @@ export default function Contacts() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListContactsQueryKey() });
           queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-          toast({ title: "Paciente criado" });
+          toast({ title: "Paciente criado", description: "Acesse o paciente para ver o link do portal" });
           setOpen(false);
           setForm({ name: "", email: "", phone: "", role: "", status: "lead", notes: "", companyId: "" });
         },

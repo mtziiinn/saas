@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useGetContact, getGetContactQueryKey, useDeleteContact, useUpdateContact, useListTasks, getListTasksQueryKey, useGetRecentActivity, useListCompanies } from "@workspace/api-client-react";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, Building2, Mail, Phone, Briefcase, Trash2, Edit, CheckCircle2, Circle, Clock, CalendarClock, FileText, Stethoscope, Activity, DollarSign, TrendingUp, TrendingDown } from "lucide-react";
+import { ArrowLeft, Building2, Mail, Phone, Briefcase, Trash2, Edit, CheckCircle2, Circle, Clock, CalendarClock, FileText, Stethoscope, Activity, DollarSign, TrendingUp, TrendingDown, ExternalLink, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +31,8 @@ export default function ContactDetail() {
   const [recallDate, setRecallDate] = useState("");
   const [timelineItems, setTimelineItems] = useState<any[]>([]);
   const [finances, setFinances] = useState<any>(null);
+  const [portalToken, setPortalToken] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const { data: companies } = useListCompanies();
 
@@ -79,6 +81,24 @@ export default function ContactDetail() {
       .then(setFinances)
       .catch(() => {});
   }, [id, accessToken]);
+
+  useEffect(() => {
+    if (!accessToken || !id) return;
+    fetch(`/api/contacts/${id}/portal-token`, { headers: { Authorization: `Bearer ${accessToken}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => setPortalToken(d?.patientToken || null))
+      .catch(() => {});
+  }, [id, accessToken]);
+
+  const portalUrl = portalToken ? `${window.location.origin}/paciente/${portalToken}` : null;
+
+  const copyPortalLink = () => {
+    if (!portalUrl) return;
+    navigator.clipboard.writeText(portalUrl);
+    setCopied(true);
+    toast({ title: "Link copiado!" });
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const deleteMutation = useDeleteContact();
   const updateMutation = useUpdateContact();
@@ -420,6 +440,34 @@ export default function ContactDetail() {
               )}
             </CardContent>
           </Card>
+
+          {portalUrl && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ExternalLink className="h-5 w-5 text-primary" />
+                  Portal do Paciente
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">Compartilhe este link com o paciente:</p>
+                  <div className="flex items-center gap-2">
+                    <Input value={portalUrl} readOnly className="text-xs" />
+                    <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={copyPortalLink}>
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  {copied && <p className="text-xs text-green-600">Link copiado!</p>}
+                  <Link href={`/paciente/${portalToken}`}>
+                    <Button variant="default" size="sm" className="w-full gap-2">
+                      <ExternalLink className="h-4 w-4" /> Abrir Portal
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
