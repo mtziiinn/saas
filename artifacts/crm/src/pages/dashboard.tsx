@@ -112,7 +112,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-destructive">{stats.tasksOverdue}</div>
-                <p className="text-xs text-muted-foreground text-destructive/80">Requer atenção</p>
+                <p className="text-xs text-destructive/80">Requer atenção</p>
             </CardContent>
           </Card>
         </div>

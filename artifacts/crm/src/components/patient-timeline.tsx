@@ -42,7 +42,7 @@ export function PatientTimeline({ items }: Props) {
             {index !== items.length - 1 && (
               <div className="absolute left-3.5 top-5 bottom-0 w-px bg-border" />
             )}
-            <div className={`absolute left-[5px] top-1 h-6 w-6 rounded-full ${colorMap[item.type] || "bg-primary"} flex items-center justify-center ring-4 ring-background`}>
+            <div className={`absolute left-1.25 top-1 h-6 w-6 rounded-full ${colorMap[item.type] || "bg-primary"} flex items-center justify-center ring-4 ring-background`}>
               <Icon className="h-3 w-3 text-white" />
             </div>
             <div>

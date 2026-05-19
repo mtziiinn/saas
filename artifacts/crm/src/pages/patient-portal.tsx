@@ -33,7 +33,7 @@ export default function PatientPortal() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white dark:from-teal-950 dark:to-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-linear-to-b from-teal-50 to-white dark:from-teal-950 dark:to-background flex items-center justify-center p-4">
         <div className="w-full max-w-2xl space-y-4">
           <Skeleton className="h-12 w-48 mx-auto" />
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 w-full rounded-xl" />)}
@@ -44,7 +44,7 @@ export default function PatientPortal() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white dark:from-teal-950 dark:to-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-linear-to-b from-teal-50 to-white dark:from-teal-950 dark:to-background flex items-center justify-center p-4">
         <Card className="max-w-md text-center p-8">
           <Stethoscope className="h-12 w-12 text-primary mx-auto mb-4" />
           <h1 className="text-xl font-semibold mb-2">Acesso Não Encontrado</h1>
@@ -60,7 +60,7 @@ export default function PatientPortal() {
   const pastAppts = appointments.filter(a => a.status === "done" || (a.dueDate && isBefore(parseISO(a.dueDate), new Date())));
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white dark:from-teal-950 dark:to-background">
+    <div className="min-h-screen bg-linear-to-b from-teal-50 to-white dark:from-teal-950 dark:to-background">
       <header className="border-b bg-white/80 dark:bg-background/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3">
           <div className="h-8 w-8 rounded bg-primary text-primary-foreground flex items-center justify-center">
