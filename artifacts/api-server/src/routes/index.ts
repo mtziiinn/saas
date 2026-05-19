@@ -8,6 +8,7 @@ import dashboardRouter from "./dashboard";
 import searchRouter from "./search";
 import exportRouter from "./export";
 import treatmentPlansRouter from "./treatment-plans";
+import financialRouter from "./financial";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(companiesRouter);
 router.use(tasksRouter);
 router.use(dashboardRouter);
 router.use(treatmentPlansRouter);
+router.use(financialRouter);
 
 export default router;
