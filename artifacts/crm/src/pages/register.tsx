@@ -43,11 +43,11 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold font-serif text-2xl mb-4">
-            A
+          <div className="mx-auto h-12 w-12 rounded bg-primary text-primary-foreground flex items-center justify-center text-2xl mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 16.2c-1.1-1.1-1.1-3 0-4.1l6.6-6.6c1.1-1.1 3-1.1 4.1 0c1.1 1.1 1.1 3 0 4.1L13.5 9c-1.1 1.1-3 1.1-4.1 0"/><path d="M2 22c2.2-2.2 2.2-5.8 0-8"/><path d="M15 11c1.1 1.1 1.1 3 0 4.1l-1.5 1.5c-1.1 1.1-2.9 1.1-4 0"/><path d="M4 12h4"/></svg>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Get started with Agency CRM</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Criar conta</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Comece a usar o OdontoFlow</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -101,14 +101,14 @@ export default function Register() {
             disabled={loading}
             className="inline-flex w-full items-center justify-center rounded-md bg-primary text-primary-foreground h-10 px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
           >
-            {loading ? "Creating account..." : "Create account"}
+            {loading ? "Criando conta..." : "Criar conta"}
           </button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
+          Já tem conta?{" "}
           <Link href="/login" className="font-medium text-primary hover:underline">
-            Sign in
+            Entrar
           </Link>
         </p>
       </div>

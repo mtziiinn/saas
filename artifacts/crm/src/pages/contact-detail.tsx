@@ -46,10 +46,10 @@ export default function ContactDetail() {
   const updateMutation = useUpdateContact();
 
   const handleDelete = () => {
-    if (confirm("Are you sure you want to delete this contact?")) {
+    if (confirm("Tem certeza que deseja excluir este paciente?")) {
       deleteMutation.mutate({ id }, {
         onSuccess: () => {
-          toast({ title: "Contact deleted" });
+          toast({ title: "Paciente excluído" });
           queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
           setLocation("/contacts");
         }
@@ -73,7 +73,7 @@ export default function ContactDetail() {
     
     updateMutation.mutate({ id, data }, {
       onSuccess: () => {
-        toast({ title: "Contact updated" });
+        toast({ title: "Paciente atualizado" });
         queryClient.invalidateQueries({ queryKey: getGetContactQueryKey(id) });
         setIsEditDialogOpen(false);
       }
@@ -99,14 +99,14 @@ export default function ContactDetail() {
   }
 
   if (!contact) {
-    return <div className="text-center py-12 text-muted-foreground">Contact not found.</div>;
+    return     <div className="text-center py-12 text-muted-foreground">Paciente não encontrado.</div>;
   }
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       <Link href="/contacts" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground">
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Contacts
+        Voltar para Pacientes
       </Link>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -128,7 +128,7 @@ export default function ContactDetail() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Edit Contact</DialogTitle>
+                <DialogTitle>Editar Paciente</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleUpdate} className="space-y-4 pt-4">
                 <div className="space-y-2">
@@ -157,16 +157,16 @@ export default function ContactDetail() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="lead">Lead</SelectItem>
-                        <SelectItem value="prospect">Prospect</SelectItem>
-                        <SelectItem value="client">Client</SelectItem>
-                        <SelectItem value="churned">Churned</SelectItem>
+                        <SelectItem value="lead">Potencial</SelectItem>
+                        <SelectItem value="prospect">Agendado</SelectItem>
+                        <SelectItem value="client">Ativo</SelectItem>
+                        <SelectItem value="churned">Inativo</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="companyId">Company</Label>
+                  <Label htmlFor="companyId">Clínica</Label>
                   <Select name="companyId" defaultValue={contact.companyId ? String(contact.companyId) : ""}>
                     <SelectTrigger>
                       <SelectValue placeholder="None" />
@@ -177,12 +177,12 @@ export default function ContactDetail() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
+                  <Label htmlFor="notes">Observações</Label>
                   <Textarea id="notes" name="notes" defaultValue={contact.notes || ""} rows={4} />
                 </div>
                 <div className="flex justify-end pt-2">
                   <Button type="submit" disabled={updateMutation.isPending}>
-                    {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                    {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
                   </Button>
                 </div>
               </form>
@@ -199,29 +199,29 @@ export default function ContactDetail() {
         <div className="md:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
+              <CardTitle>Informações do Paciente</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3 text-sm">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{contact.email || "No email"}</span>
+                <span>{contact.email || "Sem email"}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{contact.phone || "No phone"}</span>
+                <span>{contact.phone || "Sem telefone"}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Briefcase className="h-4 w-4 text-muted-foreground" />
-                <span>{contact.role || "No role"}</span>
+                <span>{contact.role || "Sem cargo"}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
-                <span>{contact.companyName || "No company"}</span>
+                <span>{contact.companyName || "Sem clínica"}</span>
               </div>
 
               {contact.notes && (
                 <div className="mt-6 pt-6 border-t">
-                  <h4 className="font-medium mb-2 text-sm">Notes</h4>
+                    <h4 className="font-medium mb-2 text-sm">Observações</h4>
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">{contact.notes}</p>
                 </div>
               )}

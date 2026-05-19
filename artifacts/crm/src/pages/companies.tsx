@@ -34,7 +34,7 @@ export default function Companies() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListCompaniesQueryKey() });
           queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-          toast({ title: "Company created" });
+          toast({ title: "Clínica criada" });
           setOpen(false);
           setForm({ name: "", website: "", industry: "", size: "", notes: "" });
         },
@@ -46,23 +46,23 @@ export default function Companies() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Companies</h1>
-          <p className="text-muted-foreground mt-1">Manage your client organizations.</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Clínicas</h1>
+          <p className="text-muted-foreground mt-1">Gerencie as clínicas parceiras.</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button className="shrink-0 gap-2">
               <Plus className="h-4 w-4" />
-              Add Company
+              Adicionar Clínica
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Company</DialogTitle>
+              <DialogTitle>Adicionar Clínica</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Name *</label>
+                <label className="text-sm font-medium">Nome *</label>
                 <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
               </div>
               <div className="space-y-2">
@@ -71,21 +71,21 @@ export default function Companies() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Industry</label>
+                  <label className="text-sm font-medium">Especialidade</label>
                   <Input value={form.industry} onChange={e => setForm({ ...form, industry: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Size</label>
+                  <label className="text-sm font-medium">Porte</label>
                   <Input value={form.size} onChange={e => setForm({ ...form, size: e.target.value })} />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Notes</label>
+                <label className="text-sm font-medium">Observações</label>
                 <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
               </div>
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Saving..." : "Save"}</Button>
+                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                  <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Salvando..." : "Salvar"}</Button>
               </div>
             </form>
           </DialogContent>
@@ -95,7 +95,7 @@ export default function Companies() {
       <div className="flex items-center space-x-2">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search companies..." className="pl-9 bg-card" value={search} onChange={e => setSearch(e.target.value)} />
+          <Input           placeholder="Buscar clínicas..." className="pl-9 bg-card" value={search} onChange={e => setSearch(e.target.value)} />
           {search && <X className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer" onClick={() => setSearch("")} />}
         </div>
       </div>
@@ -107,7 +107,7 @@ export default function Companies() {
           ))
         ) : companies?.length === 0 ? (
           <div className="col-span-full py-12 text-center text-muted-foreground border rounded-lg bg-card">
-            No companies found.
+            Nenhuma clínica encontrada.
           </div>
         ) : (
           companies?.map((company) => (
@@ -120,13 +120,13 @@ export default function Companies() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">{company.name}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-1">{company.industry || "No industry"}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-1">{company.industry || "Sem especialidade"}</p>
                     </div>
                   </div>
                   <div className="mt-6 flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
-                      <span>{company.contactCount} contacts</span>
+                        <span>{company.contactCount} pacientes</span>
                     </div>
                   </div>
                 </CardContent>

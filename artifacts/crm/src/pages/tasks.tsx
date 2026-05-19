@@ -58,7 +58,7 @@ export default function Tasks() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
           queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-          toast({ title: "Task created" });
+          toast({ title: "Agendamento criado" });
           setOpen(false);
           setForm({ title: "", description: "", status: "pending", priority: "medium", dueDate: "", contactId: "", companyId: "" });
         },
@@ -76,7 +76,7 @@ export default function Tasks() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("Delete this task?")) {
+    if (confirm("Excluir este agendamento?")) {
       deleteMutation.mutate({ id }, {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
@@ -98,8 +98,8 @@ export default function Tasks() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Tasks</h1>
-          <p className="text-muted-foreground mt-1">Manage your to-dos across all projects.</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Agendamentos</h1>
+          <p className="text-muted-foreground mt-1">Gerencie consultas e compromissos.</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Button variant="outline" className="gap-2" onClick={handleExport}>
@@ -110,20 +110,20 @@ export default function Tasks() {
             <DialogTrigger asChild>
               <Button className="gap-2" data-testid="button-add-task">
                 <Plus className="h-4 w-4" />
-                Add Task
+                Adicionar Agendamento
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add Task</DialogTitle>
+                <DialogTitle>Adicionar Agendamento</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Title *</label>
+                    <label className="text-sm font-medium">Título *</label>
                   <Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
+                    <label className="text-sm font-medium">Descrição</label>
                   <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -132,9 +132,9 @@ export default function Tasks() {
                     <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="done">Done</SelectItem>
+                        <SelectItem value="pending">Pendente</SelectItem>
+                        <SelectItem value="in_progress">Em Andamento</SelectItem>
+                        <SelectItem value="done">Concluído</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -143,20 +143,20 @@ export default function Tasks() {
                     <Select value={form.priority} onValueChange={v => setForm({ ...form, priority: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="low">Baixa</SelectItem>
+                        <SelectItem value="medium">Média</SelectItem>
+                        <SelectItem value="high">Alta</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Due Date</label>
+                    <label className="text-sm font-medium">Data</label>
                   <Input type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Contact</label>
+                    <label className="text-sm font-medium">Paciente</label>
                     <Select value={form.contactId} onValueChange={v => setForm({ ...form, contactId: v })}>
                       <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
                       <SelectContent>
@@ -165,7 +165,7 @@ export default function Tasks() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Company</label>
+                    <label className="text-sm font-medium">Clínica</label>
                     <Select value={form.companyId} onValueChange={v => setForm({ ...form, companyId: v })}>
                       <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
                       <SelectContent>
@@ -175,8 +175,8 @@ export default function Tasks() {
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Saving..." : "Save"}</Button>
+                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                  <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Salvando..." : "Salvar"}</Button>
                 </div>
               </form>
             </DialogContent>
@@ -187,7 +187,7 @@ export default function Tasks() {
       <div className="flex items-center space-x-2">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search tasks..." className="pl-9 bg-card" value={search} onChange={e => setSearch(e.target.value)} />
+          <Input           placeholder="Buscar agendamentos..." className="pl-9 bg-card" value={search} onChange={e => setSearch(e.target.value)} />
           {search && <X className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer" onClick={() => setSearch("")} />}
         </div>
       </div>
@@ -206,7 +206,7 @@ export default function Tasks() {
             ))
           ) : tasks?.length === 0 ? (
             <div className="p-12 text-center text-muted-foreground">
-              No tasks found.
+              Nenhum agendamento encontrado.
             </div>
           ) : (
             (filteredTasks ?? tasks)?.map((task) => (

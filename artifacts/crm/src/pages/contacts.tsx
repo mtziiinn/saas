@@ -24,6 +24,12 @@ export default function Contacts() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", role: "", status: "lead", notes: "", companyId: "" });
+  const statusOptions = [
+    { value: "lead", label: "Potencial" },
+    { value: "prospect", label: "Agendado" },
+    { value: "client", label: "Ativo" },
+    { value: "churned", label: "Inativo" },
+  ];
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
@@ -51,7 +57,7 @@ export default function Contacts() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListContactsQueryKey() });
           queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-          toast({ title: "Contact created" });
+          toast({ title: "Paciente criado" });
           setOpen(false);
           setForm({ name: "", email: "", phone: "", role: "", status: "lead", notes: "", companyId: "" });
         },
@@ -61,7 +67,7 @@ export default function Contacts() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "lead": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+      case "lead": return "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300";
       case "prospect": return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300";
       case "client": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
       case "churned": return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
@@ -69,12 +75,17 @@ export default function Contacts() {
     }
   };
 
+  const formatStatus = (status: string) => {
+    const found = statusOptions.find(s => s.value === status);
+    return found ? found.label : status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Contacts</h1>
-          <p className="text-muted-foreground mt-1">Manage your leads and clients.</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Pacientes</h1>
+          <p className="text-muted-foreground mt-1">Gerencie seus pacientes e potenciais.</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Button variant="outline" className="gap-2" onClick={handleExport}>
@@ -85,16 +96,16 @@ export default function Contacts() {
             <DialogTrigger asChild>
               <Button className="gap-2" data-testid="button-add-contact">
                 <Plus className="h-4 w-4" />
-                Add Contact
+                Adicionar Paciente
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add Contact</DialogTitle>
+                <DialogTitle>Adicionar Paciente</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Name *</label>
+                    <label className="text-sm font-medium">Nome *</label>
                   <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
                 </div>
                 <div className="space-y-2">
@@ -106,7 +117,7 @@ export default function Contacts() {
                   <Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Role</label>
+                    <label className="text-sm font-medium">Profissão</label>
                   <Input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -115,15 +126,12 @@ export default function Contacts() {
                     <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="lead">Lead</SelectItem>
-                        <SelectItem value="prospect">Prospect</SelectItem>
-                        <SelectItem value="client">Client</SelectItem>
-                        <SelectItem value="churned">Churned</SelectItem>
+                        {statusOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Company</label>
+                    <label className="text-sm font-medium">Clínica</label>
                     <Select value={form.companyId} onValueChange={v => setForm({ ...form, companyId: v })}>
                       <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
                       <SelectContent>
@@ -133,12 +141,12 @@ export default function Contacts() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Notes</label>
+                    <label className="text-sm font-medium">Observações</label>
                   <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Saving..." : "Save"}</Button>
+                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                  <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Salvando..." : "Salvar"}</Button>
                 </div>
               </form>
             </DialogContent>
@@ -149,7 +157,7 @@ export default function Contacts() {
       <div className="flex items-center space-x-2">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search contacts..." className="pl-9 bg-card" value={search} onChange={e => setSearch(e.target.value)} />
+          <Input           placeholder="Buscar pacientes..." className="pl-9 bg-card" value={search} onChange={e => setSearch(e.target.value)} />
           {search && <X className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer" onClick={() => setSearch("")} />}
         </div>
       </div>
@@ -159,8 +167,8 @@ export default function Contacts() {
           <table className="w-full text-sm text-left">
             <thead className="text-xs text-muted-foreground bg-muted/50 border-b">
               <tr>
-                <th className="px-6 py-4 font-medium">Name</th>
-                <th className="px-6 py-4 font-medium">Company</th>
+                <th className="px-6 py-4 font-medium">Nome</th>
+                <th className="px-6 py-4 font-medium">Clínica</th>
                 <th className="px-6 py-4 font-medium">Status</th>
                 <th className="px-6 py-4 font-medium">Email</th>
               </tr>
@@ -178,7 +186,7 @@ export default function Contacts() {
               ) : contacts?.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground">
-                    No contacts found.
+                    Nenhum paciente encontrado.
                   </td>
                 </tr>
               ) : (
@@ -194,7 +202,7 @@ export default function Contacts() {
                     </td>
                     <td className="px-6 py-4">
                       <Badge variant="secondary" className={getStatusColor(contact.status)}>
-                        {contact.status.charAt(0).toUpperCase() + contact.status.slice(1)}
+                        {formatStatus(contact.status)}
                       </Badge>
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">

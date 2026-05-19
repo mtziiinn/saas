@@ -32,10 +32,10 @@ export default function CompanyDetail() {
   const updateMutation = useUpdateCompany();
 
   const handleDelete = () => {
-    if (confirm("Are you sure you want to delete this company?")) {
+    if (confirm("Tem certeza que deseja excluir esta clínica?")) {
       deleteMutation.mutate({ id }, {
         onSuccess: () => {
-          toast({ title: "Company deleted" });
+          toast({ title: "Clínica excluída" });
           queryClient.invalidateQueries({ queryKey: ["/api/companies"] });
           setLocation("/companies");
         }
@@ -55,7 +55,7 @@ export default function CompanyDetail() {
     };
     updateMutation.mutate({ id, data }, {
       onSuccess: () => {
-        toast({ title: "Company updated" });
+        toast({ title: "Clínica atualizada" });
         queryClient.invalidateQueries({ queryKey: getGetCompanyQueryKey(id) });
         setIsEditOpen(false);
       }
@@ -72,14 +72,14 @@ export default function CompanyDetail() {
   }
 
   if (!company) {
-    return <div className="text-center py-12 text-muted-foreground">Company not found.</div>;
+    return     <div className="text-center py-12 text-muted-foreground">Clínica não encontrada.</div>;
   }
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       <Link href="/companies" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground">
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Companies
+        Voltar para Clínicas
       </Link>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -100,11 +100,11 @@ export default function CompanyDetail() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Edit Company</DialogTitle>
+                <DialogTitle>Editar Clínica</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleUpdate} className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="name">Nome</Label>
                   <Input id="name" name="name" defaultValue={company?.name} required />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -118,16 +118,16 @@ export default function CompanyDetail() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="size">Size</Label>
+                  <Label htmlFor="size">Porte</Label>
                   <Input id="size" name="size" defaultValue={company?.size || ""} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
+                  <Label htmlFor="notes">Observações</Label>
                   <Textarea id="notes" name="notes" defaultValue={company?.notes || ""} rows={4} />
                 </div>
                 <div className="flex justify-end pt-2">
                   <Button type="submit" disabled={updateMutation.isPending}>
-                    {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                    {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
                   </Button>
                 </div>
               </form>
@@ -142,21 +142,21 @@ export default function CompanyDetail() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Company Information</CardTitle>
+            <CardTitle>Informações da Clínica</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3 text-sm">
               <Globe className="h-4 w-4 text-muted-foreground" />
-              <span>{company.website || "No website"}</span>
+              <span>{company.website || "Sem site"}</span>
             </div>
             <div className="flex items-center gap-3 text-sm">
               <Briefcase className="h-4 w-4 text-muted-foreground" />
-              <span>{company.industry || "No industry"} ({company.size || "Unknown size"})</span>
+              <span>{company.industry || "Sem especialidade"} ({company.size || "Porte não informado"})</span>
             </div>
 
             {company.notes && (
               <div className="mt-6 pt-6 border-t">
-                <h4 className="font-medium mb-2 text-sm">Notes</h4>
+                <h4 className="font-medium mb-2 text-sm">Observações</h4>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{company.notes}</p>
               </div>
             )}

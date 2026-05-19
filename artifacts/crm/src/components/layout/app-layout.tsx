@@ -3,12 +3,13 @@ import {
   LayoutDashboard, 
   Users, 
   Building2, 
-  CheckSquare, 
+  CalendarClock, 
   Settings,
   LogOut,
   Menu,
   Search,
-  X
+  X,
+  Stethoscope
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -20,9 +21,9 @@ import { useAuth } from "@/hooks/use-auth";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Contacts", href: "/contacts", icon: Users },
-  { name: "Companies", href: "/companies", icon: Building2 },
-  { name: "Tasks", href: "/tasks", icon: CheckSquare },
+  { name: "Pacientes", href: "/contacts", icon: Users },
+  { name: "Clínicas", href: "/companies", icon: Building2 },
+  { name: "Agendamentos", href: "/tasks", icon: CalendarClock },
 ];
 
 function GlobalSearch() {
@@ -76,7 +77,7 @@ function GlobalSearch() {
       <div className="relative">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input 
-          placeholder="Search everywhere..." 
+          placeholder="Buscar pacientes, clínicas..." 
           className="pl-9 pr-9 bg-card w-full"
           value={q}
           onChange={(e) => {
@@ -99,17 +100,17 @@ function GlobalSearch() {
 
       {isOpen && debouncedQ.length >= 2 && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-popover text-popover-foreground border rounded-md shadow-md z-50 max-h-[80vh] overflow-y-auto">
-          {isLoading && <div className="p-4 text-sm text-center text-muted-foreground">Searching...</div>}
+          {isLoading && <div className="p-4 text-sm text-center text-muted-foreground">Buscando...</div>}
           
           {!isLoading && results && (
             <div className="py-2">
               {results.contacts.length === 0 && results.companies.length === 0 && results.tasks.length === 0 && (
-                <div className="p-4 text-sm text-center text-muted-foreground">No results found.</div>
+                <div className="p-4 text-sm text-center text-muted-foreground">Nenhum resultado encontrado.</div>
               )}
 
-              {results.contacts.length > 0 && (
+                  {results.contacts.length > 0 && (
                 <div className="px-2 pb-2">
-                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Contacts</div>
+                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pacientes</div>
                   {results.contacts.map(c => (
                     <button key={c.id} onClick={() => handleSelect(`/contacts/${c.id}`)} className="w-full flex items-center justify-between px-2 py-2 hover:bg-muted rounded-sm text-sm text-left">
                       <span className="font-medium truncate">{c.name}</span>
@@ -119,9 +120,9 @@ function GlobalSearch() {
                 </div>
               )}
 
-              {results.companies.length > 0 && (
+                  {results.companies.length > 0 && (
                 <div className="px-2 pb-2">
-                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Companies</div>
+                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Clínicas</div>
                   {results.companies.map(c => (
                     <button key={c.id} onClick={() => handleSelect(`/companies/${c.id}`)} className="w-full flex items-center justify-between px-2 py-2 hover:bg-muted rounded-sm text-sm text-left">
                       <span className="font-medium truncate">{c.name}</span>
@@ -131,9 +132,9 @@ function GlobalSearch() {
                 </div>
               )}
 
-              {results.tasks.length > 0 && (
+                  {results.tasks.length > 0 && (
                 <div className="px-2 pb-1">
-                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tasks</div>
+                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Agendamentos</div>
                   {results.tasks.map(t => (
                     <button key={t.id} onClick={() => handleSelect(`/tasks`)} className="w-full flex items-center justify-between px-2 py-2 hover:bg-muted rounded-sm text-sm text-left">
                       <span className="font-medium truncate">{t.title}</span>
@@ -157,14 +158,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const Sidebar = () => (
     <div className="flex h-full flex-col gap-y-5 bg-sidebar px-6 pb-4">
       <div className="flex h-16 shrink-0 items-center">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold font-serif text-xl">
-            A
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded bg-primary text-primary-foreground flex items-center justify-center text-lg">
+              <Stethoscope className="h-5 w-5" />
+            </div>
+            <span className="font-semibold text-sidebar-foreground text-lg tracking-tight">
+              OdontoFlow
+            </span>
           </div>
-          <span className="font-semibold text-sidebar-foreground text-lg tracking-tight">
-            Agency CRM
-          </span>
-        </div>
       </div>
       <nav className="flex flex-1 flex-col">
         <ul role="list" className="flex flex-1 flex-col gap-y-7">
@@ -214,14 +215,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 className={`h-5 w-5 shrink-0 ${location === "/settings" ? "text-primary" : "text-sidebar-foreground/70"}`}
                 aria-hidden="true"
               />
-              Settings
+              Configurações
             </Link>
             <button
               onClick={logout}
               className="group -mx-2 flex w-full gap-x-3 rounded-md p-2 text-sm font-medium leading-6 text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
             >
               <LogOut className="h-5 w-5 shrink-0 text-sidebar-foreground/70" aria-hidden="true" />
-              Sign out
+              Sair
             </button>
           </li>
         </ul>
@@ -242,11 +243,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </Button>
             </SheetTrigger>
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold font-serif text-sm">
-                A
+              <div className="h-6 w-6 rounded bg-primary text-primary-foreground flex items-center justify-center text-sm">
+                <Stethoscope className="h-4 w-4" />
               </div>
               <span className="font-semibold text-foreground text-sm tracking-tight">
-                Agency CRM
+                OdontoFlow
               </span>
             </div>
           </div>

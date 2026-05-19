@@ -30,7 +30,7 @@ export default function Dashboard() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Overview of your agency's performance.</p>
+        <p className="text-muted-foreground mt-1">Visão geral da sua clínica.</p>
       </div>
 
       {statsLoading ? (
@@ -43,17 +43,17 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
+              <CardTitle className="text-sm font-medium">Total de Pacientes</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalContacts}</div>
-              <p className="text-xs text-muted-foreground">+{stats.newContactsThisMonth} this month</p>
+                <p className="text-xs text-muted-foreground">+{stats.newContactsThisMonth} este mês</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Companies</CardTitle>
+              <CardTitle className="text-sm font-medium">Clínicas</CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -62,22 +62,22 @@ export default function Dashboard() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Open Tasks</CardTitle>
+              <CardTitle className="text-sm font-medium">Agendamentos Abertos</CardTitle>
               <CheckSquare className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalTasks - stats.tasksDone}</div>
-              <p className="text-xs text-muted-foreground">{stats.tasksDueToday} due today</p>
+                <p className="text-xs text-muted-foreground">{stats.tasksDueToday} para hoje</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-destructive">Overdue Tasks</CardTitle>
+              <CardTitle className="text-sm font-medium text-destructive">Em Atraso</CardTitle>
               <AlertCircle className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-destructive">{stats.tasksOverdue}</div>
-              <p className="text-xs text-muted-foreground text-destructive/80">Requires attention</p>
+                <p className="text-xs text-muted-foreground text-destructive/80">Requer atenção</p>
             </CardContent>
           </Card>
         </div>
@@ -86,7 +86,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Contacts by Status</CardTitle>
+            <CardTitle className="text-base">Pacientes por Status</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
             {contactsByStatusLoading ? (
@@ -116,14 +116,14 @@ export default function Dashboard() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-sm text-muted-foreground">No data available</div>
+              <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Sem dados disponíveis</div>
             )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Task Overview</CardTitle>
+            <CardTitle className="text-base">Visão Geral de Agendamentos</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
             {statsLoading ? (
@@ -154,7 +154,7 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckSquare className="h-5 w-5 text-primary" />
-              Upcoming Tasks
+              Próximos Agendamentos
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -169,7 +169,7 @@ export default function Dashboard() {
                     <div>
                       <p className="font-medium text-sm">{task.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {task.contactName || task.companyName || "No associate"}
+                        {                  task.contactName || task.companyName || "Sem vínculo"}
                       </p>
                     </div>
                     {task.dueDate && (
@@ -181,7 +181,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">No upcoming tasks.</p>
+                <p className="text-sm text-muted-foreground py-4 text-center">Nenhum agendamento futuro.</p>
             )}
           </CardContent>
         </Card>
@@ -213,7 +213,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">No recent activity.</p>
+                <p className="text-sm text-muted-foreground py-4 text-center">Nenhuma atividade recente.</p>
             )}
           </CardContent>
         </Card>
