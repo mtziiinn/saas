@@ -4,6 +4,7 @@ import { notificationsTable, contactsTable, tasksTable } from "@workspace/db";
 import { activityLogTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
+import { sendEmail, isEmailConfigured } from "../services/email";
 
 const router = Router();
 router.use(requireAuth);
@@ -41,8 +42,23 @@ router.post("/notifications/send", async (req, res) => {
     return;
   }
 
-  const channel = type === "email" && contact.email ? "email" : type === "sms" && contact.phone ? "sms" : "simulado";
-  const recipient = channel === "email" ? contact.email! : channel === "sms" ? contact.phone! : `${contact.name} (simulado)`;
+  let channel = "simulado";
+  let recipient = `${contact.name} (simulado)`;
+
+  if (type === "email" && contact.email) {
+    channel = isEmailConfigured() ? "email" : "simulado";
+    recipient = contact.email;
+    if (channel === "email") {
+      const sent = await sendEmail(contact.email, "Lembrete OdontoFlow", message);
+      if (!sent) {
+        channel = "simulado";
+        recipient = `${contact.email} (falha no envio)`;
+      }
+    }
+  } else if (type === "sms" && contact.phone) {
+    channel = "sms";
+    recipient = contact.phone;
+  }
 
   const [notification] = await db
     .insert(notificationsTable)
