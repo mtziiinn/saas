@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "pnpm run build",
+  "buildCommand": "pnpm --filter @workspace/db exec drizzle-kit push --config ./drizzle.config.ts && pnpm run build",
   "outputDirectory": "artifacts/crm/dist/public",
   "rewrites": [
     {
