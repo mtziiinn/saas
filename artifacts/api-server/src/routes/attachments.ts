@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { handleUpload } from "@vercel/blob";
+import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { db } from "@workspace/db";
 import { attachmentsTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -18,9 +18,12 @@ router.use(requireAuth);
 router.post("/upload", async (req, res) => {
   try {
     const jsonResponse = await handleUpload({
-      body: req.body,
+      body: req.body as HandleUploadBody,
       request: req,
-      onBeforeGenerateToken: async (pathname, clientPayload) => {
+      onBeforeGenerateToken: async (
+        pathname: string,
+        clientPayload: string | null,
+      ) => {
         // 🛡️ Segurança: Verificar se o usuário está autenticado
         if (!req.user) {
           throw new Error("Unauthorized");
@@ -51,9 +54,13 @@ router.post("/upload", async (req, res) => {
           }),
         };
       },
-      onUploadCompleted: async ({ blob, tokenPayload }) => {
+      onUploadCompleted: async (data: any) => {
         // 🛡️ Este código roda no backend após o upload ser concluído com sucesso no Vercel
         try {
+          // O SDK envia diferentes tipos de eventos, garantimos que temos o blob
+          if (!data.blob) return;
+
+          const { blob, tokenPayload } = data;
           const { userId, entityType, entityId } = JSON.parse(
             tokenPayload || "{}",
           );
@@ -62,7 +69,7 @@ router.post("/upload", async (req, res) => {
             filename: blob.url, // URL final do blob
             originalName: blob.pathname.split("/").pop() || "unnamed",
             mimeType: blob.contentType || "application/octet-stream",
-            size: (blob as any).size || 0, // Tentar pegar o size do blob se disponível
+            size: blob.size || 0,
             entityType,
             contactId: entityType === "contact" ? Number(entityId) : null,
             companyId: entityType === "company" ? Number(entityId) : null,
