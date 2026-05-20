@@ -97,7 +97,7 @@ router.post("/upload", async (req, res) => {
     const safeName = `${entityType}-${entityId}-${crypto.randomUUID()}.${ext}`;
 
     const blob = await put(safeName, file.buffer, {
-      access: "public",
+      access: "private",
       contentType: file.mimetype,
       token: process.env.BLOB_READ_WRITE_TOKEN,
     });
