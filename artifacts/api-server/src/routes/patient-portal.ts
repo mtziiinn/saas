@@ -1,6 +1,6 @@
 ﻿import { Router } from "express";
 import { db } from "@workspace/db";
-import { contactsTable, tasksTable, treatmentPlansTable, treatmentProceduresTable, financialTransactionsTable } from "@workspace/db";
+import { contactsTable, tasksTable, treatmentPlansTable, treatmentProceduresTable, financialTransactionsTable, prescriptionsTable } from "@workspace/db";
 import { eq, sql, inArray } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
 
@@ -77,6 +77,12 @@ router.get("/patient-portal/:token", portalLimiter, async (req, res) => {
     .where(eq(financialTransactionsTable.contactId, contact.id))
     .orderBy(sql`${financialTransactionsTable.date} desc`);
 
+  const prescriptions = await db
+    .select()
+    .from(prescriptionsTable)
+    .where(eq(prescriptionsTable.contactId, contact.id))
+    .orderBy(sql`${prescriptionsTable.createdAt} desc`);
+
   const totalIncome = transactions.filter(t => t.type === "income" && t.status === "paid").reduce((s, t) => s + Number(t.amount), 0);
   const totalExpense = transactions.filter(t => t.type === "expense" && t.status === "paid").reduce((s, t) => s + Number(t.amount), 0);
   const pendingIncome = transactions.filter(t => t.type === "income" && t.status === "pending").reduce((s, t) => s + Number(t.amount), 0);
@@ -91,6 +97,7 @@ router.get("/patient-portal/:token", portalLimiter, async (req, res) => {
       pendingIncome,
       balance: totalIncome - totalExpense,
     },
+    prescriptions: prescriptions.map(p => ({ ...p, createdAt: p.createdAt.toISOString() })),
   });
 });
 

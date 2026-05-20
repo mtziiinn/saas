@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRoute, Link } from "wouter";
-import { CalendarClock, FileText, DollarSign, Phone, Mail, TrendingUp, TrendingDown, Clock, CheckCircle2, Circle, Stethoscope } from "lucide-react";
+import { CalendarClock, FileText, DollarSign, Phone, Mail, TrendingUp, TrendingDown, Clock, CheckCircle2, Circle, Stethoscope, Pill } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,6 +13,7 @@ interface PortalData {
   appointments: any[];
   treatmentPlans: any[];
   finances: { totalIncome: number; totalExpense: number; pendingIncome: number; balance: number };
+  prescriptions: any[];
 }
 
 export default function PatientPortal() {
@@ -55,7 +56,7 @@ export default function PatientPortal() {
     );
   }
 
-  const { patient, appointments, treatmentPlans, finances } = data;
+  const { patient, appointments, treatmentPlans, finances, prescriptions } = data;
   const upcomingAppts = appointments.filter(a => a.status !== "done" && (!a.dueDate || !isBefore(parseISO(a.dueDate), new Date())));
   const pastAppts = appointments.filter(a => a.status === "done" || (a.dueDate && isBefore(parseISO(a.dueDate), new Date())));
 
@@ -177,6 +178,31 @@ export default function PatientPortal() {
                     <span className="text-muted-foreground">Total</span>
                     <span className="font-bold text-primary">R$ {Number(plan.totalValue).toFixed(2)}</span>
                   </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {prescriptions.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Pill className="h-5 w-5 text-primary" /> Prescrições
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {prescriptions.map((rx: any) => (
+                <div key={rx.id} className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-sm">{rx.medication}</h3>
+                    <span className="text-xs text-muted-foreground">{format(parseISO(rx.createdAt), "dd/MM/yyyy")}</span>
+                  </div>
+                  <div className="flex gap-4 text-sm text-muted-foreground">
+                    <span><strong>Posologia:</strong> {rx.dosage}</span>
+                    <span><strong>Duração:</strong> {rx.duration}</span>
+                  </div>
+                  {rx.notes && <p className="text-sm text-muted-foreground mt-2">{rx.notes}</p>}
                 </div>
               ))}
             </CardContent>
