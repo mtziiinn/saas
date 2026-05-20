@@ -104,6 +104,13 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
     }
 
     setIsUploading(true);
+    console.log("Iniciando upload:", {
+      fileName: file.name,
+      fileSize: file.size,
+      entityType,
+      entityId,
+    });
+
     try {
       const newBlob = await upload(file.name, file, {
         access: "public",
@@ -115,6 +122,7 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
         },
       });
 
+      console.log("Upload finalizado com sucesso:", newBlob);
       toast({
         title: "Sucesso",
         description: `Arquivo "${file.name}" enviado!`,
@@ -123,13 +131,17 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
         queryKey: ["attachments", entityType, entityId],
       });
     } catch (error) {
-      console.error("Upload error:", error);
+      console.error("Erro detalhado no upload:", error);
       toast({
         title: "Erro no Upload",
-        description: "Não foi possível enviar o arquivo.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível enviar o arquivo.",
         variant: "destructive",
       });
     } finally {
+      console.log("Resetando estado de upload");
       setIsUploading(false);
       // Limpar o input para permitir subir o mesmo arquivo novamente se necessário
       event.target.value = "";
