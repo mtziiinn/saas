@@ -61,6 +61,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { PatientTimeline } from "@/components/patient-timeline";
 import { DocumentsTab } from "@/components/documents-tab";
+import { ClinicalRecordTab } from "@/components/clinical-record-tab";
 
 export default function ContactDetail() {
   const [, params] = useRoute("/contacts/:id");
@@ -490,6 +491,8 @@ export default function ContactDetail() {
           </Card>
 
           <DocumentsTab entityType="contact" entityId={id} />
+
+          <ClinicalRecordTab contactId={id} />
 
           <Card>
             <CardHeader>

@@ -12,6 +12,7 @@ import financialRouter from "./financial";
 import notificationsRouter from "./notifications";
 import patientPortalRouter from "./patient-portal";
 import attachmentsRouter from "./attachments";
+import clinicalRecordsRouter from "./clinical-records";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(treatmentPlansRouter);
 router.use(financialRouter);
 router.use(notificationsRouter);
 router.use("/attachments", attachmentsRouter);
+router.use("/clinical-records", clinicalRecordsRouter);
 
 export default router;
