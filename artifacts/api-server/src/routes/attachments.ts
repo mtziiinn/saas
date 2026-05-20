@@ -187,7 +187,7 @@ router.get("/:id/download", async (req, res) => {
       },
     });
 
-    if (!blobRes.ok) {
+    if (!blobRes.ok || !blobRes.body) {
       return res.status(404).json({ error: "File not found in storage" });
     }
 
@@ -198,7 +198,9 @@ router.get("/:id/download", async (req, res) => {
     res.setHeader("Content-Disposition", contentDisposition);
     res.setHeader("Cache-Control", "private, max-age=3600");
 
-    blobRes.body?.pipe(res);
+    const nodeStream = Readable.fromWeb(blobRes.body);
+    nodeStream.pipe(res);
+    return;
   } catch (error) {
     logger.error({ error }, "Error downloading attachment");
     return res.status(500).json({ error: "Internal server error" });
