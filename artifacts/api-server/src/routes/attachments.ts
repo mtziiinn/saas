@@ -1,5 +1,5 @@
 import { Router, type Request } from "express";
-import { put, del } from "@vercel/blob";
+import { put, del, head } from "@vercel/blob";
 import { db } from "@workspace/db";
 import { attachmentsTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -167,6 +167,35 @@ router.delete("/:id", async (req, res) => {
     return res.status(204).end();
   } catch (error) {
     logger.error({ error }, "Error deleting attachment");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/:id/download", async (req, res) => {
+  const id = Number(req.params.id);
+
+  try {
+    const [attachment] = await db.select().from(attachmentsTable).where(eq(attachmentsTable.id, id));
+
+    if (!attachment) {
+      return res.status(404).json({ error: "Attachment not found" });
+    }
+
+    const blobInfo = await head(attachment.filename, {
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    });
+
+    if (!blobInfo) {
+      return res.status(404).json({ error: "File not found in storage" });
+    }
+
+    const downloadUrl = new URL(blobInfo.url);
+    downloadUrl.searchParams.set("download", "1");
+    downloadUrl.searchParams.set("token", process.env.BLOB_READ_WRITE_TOKEN!);
+
+    return res.json({ url: downloadUrl.toString() });
+  } catch (error) {
+    logger.error({ error }, "Error generating download URL");
     return res.status(500).json({ error: "Internal server error" });
   }
 });

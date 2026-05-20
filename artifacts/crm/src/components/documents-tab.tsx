@@ -236,14 +236,20 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" asChild>
-                          <a
-                            href={doc.filename}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <Download className="h-4 w-4" />
-                          </a>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={async () => {
+                            const res = await fetch(`/api/attachments/${doc.id}/download`, {
+                              headers: { Authorization: `Bearer ${accessToken}` },
+                            });
+                            if (res.ok) {
+                              const { url } = await res.json();
+                              window.open(url, "_blank");
+                            }
+                          }}
+                        >
+                          <Download className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
