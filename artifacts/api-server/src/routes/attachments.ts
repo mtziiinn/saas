@@ -4,8 +4,12 @@ import { db } from "@workspace/db";
 import { attachmentsTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { requireAuth } from "../middlewares/auth";
 
 const router = Router();
+
+// Aplicar autenticação a todas as rotas de anexos
+router.use(requireAuth);
 
 /**
  * Endpoint para o Vercel Blob gerenciar o upload client-side.
@@ -46,13 +50,14 @@ router.post("/upload", async (req, res) => {
             userId: req.user.userId,
             entityType,
             entityId,
+            size: body.payload ? JSON.parse(body.payload).size : 0, // Tentar pegar o size se enviado pelo SDK
           }),
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {
         // 🛡️ Este código roda no backend após o upload ser concluído com sucesso no Vercel
         try {
-          const { userId, entityType, entityId } = JSON.parse(
+          const { userId, entityType, entityId, size } = JSON.parse(
             tokenPayload || "{}",
           );
 
@@ -60,7 +65,7 @@ router.post("/upload", async (req, res) => {
             filename: blob.url, // URL final do blob
             originalName: blob.pathname.split("/").pop() || "unnamed",
             mimeType: blob.contentType || "application/octet-stream",
-            size: 0, // Vercel Blob não retorna size no onUploadCompleted diretamente em algumas versões, mas podemos ajustar
+            size: size || 0,
             entityType,
             contactId: entityType === "contact" ? Number(entityId) : null,
             companyId: entityType === "company" ? Number(entityId) : null,
