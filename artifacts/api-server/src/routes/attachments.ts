@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request } from "express";
 import { put, del } from "@vercel/blob";
 import { db } from "@workspace/db";
 import { attachmentsTable } from "@workspace/db/schema";
@@ -7,6 +7,7 @@ import { logger } from "../lib/logger";
 import { requireAuth } from "../middlewares/auth";
 import crypto from "crypto";
 import Busboy from "busboy";
+import { Readable } from "node:stream";
 
 const router = Router();
 
@@ -26,16 +27,28 @@ const ALLOWED_TYPES = [
 
 const MAX_SIZE = 10 * 1024 * 1024;
 
-function parseMultipart(req: any): Promise<{ file: { buffer: Buffer; filename: string; mimetype: string; size: number }; fields: Record<string, string> }> {
+interface ParsedFile {
+  buffer: Buffer;
+  filename: string;
+  mimetype: string;
+  size: number;
+}
+
+interface ParsedResult {
+  file: ParsedFile;
+  fields: Record<string, string>;
+}
+
+function parseMultipart(req: Request): Promise<ParsedResult> {
   return new Promise((resolve, reject) => {
-    const busboy = Busboy({ headers: req.headers });
+    const bb = Busboy({ headers: req.headers });
     const chunks: Buffer[] = [];
     let fileInfo: { filename: string; mimetype: string; size: number } | null = null;
     const fields: Record<string, string> = {};
 
-    busboy.on("file", (_fieldname, file, info) => {
+    bb.on("file", (_fieldname, file: Readable, info) => {
       fileInfo = { filename: info.filename, mimetype: info.mimeType, size: 0 };
-      file.on("data", (chunk) => {
+      file.on("data", (chunk: Buffer) => {
         chunks.push(chunk);
         if (fileInfo) fileInfo.size += chunk.length;
         if (fileInfo && fileInfo.size > MAX_SIZE) {
@@ -44,11 +57,11 @@ function parseMultipart(req: any): Promise<{ file: { buffer: Buffer; filename: s
       });
     });
 
-    busboy.on("field", (name, value) => {
+    bb.on("field", (name: string, value: string) => {
       fields[name] = value;
     });
 
-    busboy.on("close", () => {
+    bb.on("close", () => {
       if (!fileInfo || chunks.length === 0) {
         reject(new Error("Nenhum arquivo enviado"));
         return;
@@ -56,8 +69,8 @@ function parseMultipart(req: any): Promise<{ file: { buffer: Buffer; filename: s
       resolve({ file: { buffer: Buffer.concat(chunks), ...fileInfo }, fields });
     });
 
-    busboy.on("error", reject);
-    req.pipe(busboy);
+    bb.on("error", reject);
+    req.pipe(bb);
   });
 }
 
