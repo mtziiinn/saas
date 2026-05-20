@@ -54,8 +54,13 @@ router.post("/upload", async (req, res) => {
           }),
         };
       },
-      onUploadCompleted: async ({ blob, tokenPayload }) => {
+      onUploadCompleted: async (data) => {
         // 🛡️ Este código roda no backend após o upload ser concluído com sucesso no Vercel
+        // Usamos um type guard pois o callback pode ser chamado para diferentes eventos
+        if (!("blob" in data)) return;
+
+        const { blob, tokenPayload } = data;
+
         try {
           const { userId, entityType, entityId, size } = JSON.parse(
             tokenPayload || "{}",
