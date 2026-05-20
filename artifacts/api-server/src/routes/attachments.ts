@@ -1,5 +1,5 @@
 import { Router, type Request } from "express";
-import { put, del, head } from "@vercel/blob";
+import { put, del } from "@vercel/blob";
 import { db } from "@workspace/db";
 import { attachmentsTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -181,21 +181,26 @@ router.get("/:id/download", async (req, res) => {
       return res.status(404).json({ error: "Attachment not found" });
     }
 
-    const blobInfo = await head(attachment.filename, {
-      token: process.env.BLOB_READ_WRITE_TOKEN,
+    const blobRes = await fetch(attachment.filename, {
+      headers: {
+        Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`,
+      },
     });
 
-    if (!blobInfo) {
+    if (!blobRes.ok) {
       return res.status(404).json({ error: "File not found in storage" });
     }
 
-    const downloadUrl = new URL(blobInfo.url);
-    downloadUrl.searchParams.set("download", "1");
-    downloadUrl.searchParams.set("token", process.env.BLOB_READ_WRITE_TOKEN!);
+    const contentType = blobRes.headers.get("content-type") || attachment.mimeType;
+    const contentDisposition = `attachment; filename="${encodeURIComponent(attachment.originalName)}"`;
 
-    return res.json({ url: downloadUrl.toString() });
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Content-Disposition", contentDisposition);
+    res.setHeader("Cache-Control", "private, max-age=3600");
+
+    blobRes.body?.pipe(res);
   } catch (error) {
-    logger.error({ error }, "Error generating download URL");
+    logger.error({ error }, "Error downloading attachment");
     return res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -244,8 +244,15 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
                               headers: { Authorization: `Bearer ${accessToken}` },
                             });
                             if (res.ok) {
-                              const { url } = await res.json();
-                              window.open(url, "_blank");
+                              const blob = await res.blob();
+                              const url = window.URL.createObjectURL(blob);
+                              const a = document.createElement("a");
+                              a.href = url;
+                              a.download = doc.originalName;
+                              document.body.appendChild(a);
+                              a.click();
+                              a.remove();
+                              window.URL.revokeObjectURL(url);
                             }
                           }}
                         >
