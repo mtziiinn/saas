@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
+import { handleUpload } from "@vercel/blob";
 import { db } from "@workspace/db";
 import { attachmentsTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -16,11 +16,9 @@ router.use(requireAuth);
  * O frontend chamará este endpoint para obter permissão/token de upload.
  */
 router.post("/upload", async (req, res) => {
-  const body = req.body as HandleUploadBody;
-
   try {
     const jsonResponse = await handleUpload({
-      body,
+      body: req.body,
       request: req,
       onBeforeGenerateToken: async (pathname, clientPayload) => {
         // 🛡️ Segurança: Verificar se o usuário está autenticado
@@ -50,19 +48,13 @@ router.post("/upload", async (req, res) => {
             userId: req.user.userId,
             entityType,
             entityId,
-            size: body.payload ? JSON.parse(body.payload).size : 0, // Tentar pegar o size se enviado pelo SDK
           }),
         };
       },
-      onUploadCompleted: async (data) => {
+      onUploadCompleted: async ({ blob, tokenPayload }) => {
         // 🛡️ Este código roda no backend após o upload ser concluído com sucesso no Vercel
-        // Usamos um type guard pois o callback pode ser chamado para diferentes eventos
-        if (!("blob" in data)) return;
-
-        const { blob, tokenPayload } = data;
-
         try {
-          const { userId, entityType, entityId, size } = JSON.parse(
+          const { userId, entityType, entityId } = JSON.parse(
             tokenPayload || "{}",
           );
 
@@ -70,7 +62,7 @@ router.post("/upload", async (req, res) => {
             filename: blob.url, // URL final do blob
             originalName: blob.pathname.split("/").pop() || "unnamed",
             mimeType: blob.contentType || "application/octet-stream",
-            size: size || 0,
+            size: (blob as any).size || 0, // Tentar pegar o size do blob se disponível
             entityType,
             contactId: entityType === "contact" ? Number(entityId) : null,
             companyId: entityType === "company" ? Number(entityId) : null,
