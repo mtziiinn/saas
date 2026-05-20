@@ -1,110 +1,94 @@
 import { Router } from "express";
-import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
+import { put, del } from "@vercel/blob";
 import { db } from "@workspace/db";
 import { attachmentsTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { requireAuth } from "../middlewares/auth";
+import multer from "multer";
+import crypto from "crypto";
 
 const router = Router();
 
-// Aplicar autenticação a todas as rotas de anexos
 router.use(requireAuth);
 
+const ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+
+const MAX_SIZE = 10 * 1024 * 1024;
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_SIZE },
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_TYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Tipo de arquivo não permitido"));
+    }
+  },
+});
+
 /**
- * Endpoint para o Vercel Blob gerenciar o upload client-side.
- * O frontend chamará este endpoint para obter permissão/token de upload.
+ * Upload de arquivo via multipart/form-data
  */
-router.post("/upload", async (req, res) => {
+router.post("/upload", upload.single("file"), async (req, res) => {
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    logger.error("BLOB_READ_WRITE_TOKEN is missing from environment");
+    logger.error("BLOB_READ_WRITE_TOKEN is missing");
     return res.status(500).json({ error: "Storage configuration error" });
   }
 
-  if (!req.body || Object.keys(req.body).length === 0) {
-    logger.error("Upload handshake request missing or empty body");
-    return res.status(400).json({ error: "Missing request body" });
+  const file = req.file;
+  const { entityType, entityId } = req.body;
+
+  if (!file) {
+    return res.status(400).json({ error: "Nenhum arquivo enviado" });
   }
 
-  logger.info(
-    {
-      body: req.body,
-      user: req.user ? { userId: (req.user as any).userId } : "none",
-    },
-    "Receiving upload handshake request",
-  );
+  if (!entityType || !entityId) {
+    return res.status(400).json({ error: "entityType e entityId são obrigatórios" });
+  }
+
   try {
-    const jsonResponse = await handleUpload({
-      body: req.body as HandleUploadBody,
-      request: req,
-      onBeforeGenerateToken: async (
-        pathname: string,
-        clientPayload: string | null,
-      ) => {
-        // 🛡️ Segurança: Verificar se o usuário está autenticado
-        if (!req.user) {
-          throw new Error("Unauthorized");
-        }
+    const userId = (req.user as any).userId;
+    const ext = file.originalname.split(".").pop() || "";
+    const safeName = `${entityType}-${entityId}-${crypto.randomUUID()}.${ext}`;
 
-        // Recuperar metadados enviados pelo frontend
-        const payload = JSON.parse(clientPayload || "{}");
-        const { entityType, entityId } = payload;
-
-        if (!entityType || !entityId) {
-          throw new Error(
-            "entityType and entityId are required in clientPayload",
-          );
-        }
-
-        return {
-          allowedContentTypes: [
-            "image/jpeg",
-            "image/png",
-            "application/pdf",
-            "application/msword",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          ],
-          tokenPayload: JSON.stringify({
-            userId: req.user.userId,
-            entityType,
-            entityId,
-          }),
-        };
-      },
-      onUploadCompleted: async (data: any) => {
-        // 🛡️ Este código roda no backend após o upload ser concluído com sucesso no Vercel
-        try {
-          // O SDK envia diferentes tipos de eventos, garantimos que temos o blob
-          if (!data.blob) return;
-
-          const { blob, tokenPayload } = data;
-          const { userId, entityType, entityId } = JSON.parse(
-            tokenPayload || "{}",
-          );
-
-          await db.insert(attachmentsTable).values({
-            filename: blob.url, // URL final do blob
-            originalName: blob.pathname.split("/").pop() || "unnamed",
-            mimeType: blob.contentType || "application/octet-stream",
-            size: blob.size || 0,
-            entityType,
-            contactId: entityType === "contact" ? Number(entityId) : null,
-            companyId: entityType === "company" ? Number(entityId) : null,
-            uploadedBy: userId,
-          });
-
-          logger.info({ url: blob.url, entityId }, "Attachment metadata saved");
-        } catch (error) {
-          logger.error({ error }, "Error saving attachment metadata");
-          throw error;
-        }
-      },
+    const blob = await put(safeName, file.buffer, {
+      access: "public",
+      contentType: file.mimetype,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
     });
 
-    return res.status(200).json(jsonResponse);
+    const [attachment] = await db
+      .insert(attachmentsTable)
+      .values({
+        filename: blob.url,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        size: file.size,
+        entityType,
+        contactId: entityType === "contact" ? Number(entityId) : null,
+        companyId: entityType === "company" ? Number(entityId) : null,
+        uploadedBy: userId,
+      })
+      .returning();
+
+    logger.info({ url: blob.url, entityId }, "Attachment uploaded");
+
+    return res.json(attachment);
   } catch (error) {
-    logger.error({ error }, "Vercel Blob upload handling error");
-    return res.status(400).json({ error: (error as Error).message });
+    logger.error({ error }, "Error uploading attachment");
+    return res.status(500).json({ error: "Falha no upload do arquivo" });
   }
 });
 
@@ -147,7 +131,6 @@ router.delete("/:id", async (req, res) => {
   const id = Number(req.params.id);
 
   try {
-    // 🛡️ No futuro: Adicionar verificação se o usuário tem permissão para deletar este arquivo específico
     const [deleted] = await db
       .delete(attachmentsTable)
       .where(eq(attachmentsTable.id, id))
@@ -157,8 +140,13 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ error: "Attachment not found" });
     }
 
-    // Nota: O arquivo no Vercel Blob continua lá.
-    // Para deletar do Blob também, precisaríamos usar del(deleted.filename).
+    try {
+      await del(deleted.filename, {
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      });
+    } catch (blobError) {
+      logger.warn({ blobError }, "Failed to delete blob file");
+    }
 
     return res.status(204).end();
   } catch (error) {

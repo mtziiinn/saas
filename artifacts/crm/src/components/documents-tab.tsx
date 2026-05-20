@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { upload } from "@vercel/blob/client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -44,13 +43,26 @@ interface DocumentsTabProps {
   entityId: number;
 }
 
+const ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+
+const MAX_SIZE = 10 * 1024 * 1024;
+
 export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
   const { accessToken } = useAuth();
   const queryClient = useQueryClient();
 
-  // 📡 Buscar documentos do backend
   const { data: documents, isLoading } = useQuery<Document[]>({
     queryKey: ["attachments", entityType, entityId],
     queryFn: async () => {
@@ -66,7 +78,6 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
     enabled: !!accessToken,
   });
 
-  // 🗑️ Mutação para deletar documento
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await fetch(`/api/attachments/${id}`, {
@@ -86,15 +97,13 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
     },
   });
 
-  // ⬆️ Função de Upload
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file || !accessToken) return;
 
-    // 🛡️ Validação básica no front
-    if (file.size > 10 * 1024 * 1024) {
+    if (file.size > MAX_SIZE) {
       toast({
         title: "Erro",
         description: "O arquivo deve ter no máximo 10MB.",
@@ -103,34 +112,36 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
       return;
     }
 
-    setIsUploading(true);
-    const sanitizedFileName = file.name
-      .replace(/\s+/g, "_")
-      .replace(/[^a-zA-Z0-9._-]/g, "");
-    // Usar caminho relativo para evitar problemas de CORS se o origin mudar
-    const uploadUrl = "/api/attachments/upload";
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast({
+        title: "Erro",
+        description: "Tipo de arquivo não permitido.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    console.log("Iniciando upload:", {
-      originalName: file.name,
-      sanitizedName: sanitizedFileName,
-      fileSize: file.size,
-      entityType,
-      entityId,
-      uploadUrl,
-      hasToken: !!accessToken,
-    });
+    setIsUploading(true);
 
     try {
-      const newBlob = await upload(sanitizedFileName, file, {
-        access: "public",
-        handleUploadUrl: uploadUrl,
-        clientPayload: JSON.stringify({ entityType, entityId }),
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("entityType", entityType);
+      formData.append("entityId", String(entityId));
+
+      const res = await fetch("/api/attachments/upload", {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
+        body: formData,
       });
 
-      console.log("Upload finalizado com sucesso:", newBlob);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Falha no upload");
+      }
+
       toast({
         title: "Sucesso",
         description: `Arquivo "${file.name}" enviado!`,
@@ -139,7 +150,6 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
         queryKey: ["attachments", entityType, entityId],
       });
     } catch (error) {
-      console.error("Erro detalhado no upload:", error);
       toast({
         title: "Erro no Upload",
         description:
@@ -149,9 +159,7 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
         variant: "destructive",
       });
     } finally {
-      console.log("Resetando estado de upload");
       setIsUploading(false);
-      // Limpar o input para permitir subir o mesmo arquivo novamente se necessário
       event.target.value = "";
     }
   };
