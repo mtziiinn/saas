@@ -16,6 +16,11 @@ router.use(requireAuth);
  * O frontend chamará este endpoint para obter permissão/token de upload.
  */
 router.post("/upload", async (req, res) => {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    logger.error("BLOB_READ_WRITE_TOKEN is missing from environment");
+    return res.status(500).json({ error: "Storage configuration error" });
+  }
+
   if (!req.body || Object.keys(req.body).length === 0) {
     logger.error("Upload handshake request missing or empty body");
     return res.status(400).json({ error: "Missing request body" });
