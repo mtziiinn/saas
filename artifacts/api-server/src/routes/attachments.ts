@@ -16,6 +16,18 @@ router.use(requireAuth);
  * O frontend chamará este endpoint para obter permissão/token de upload.
  */
 router.post("/upload", async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    logger.error("Upload handshake request missing or empty body");
+    return res.status(400).json({ error: "Missing request body" });
+  }
+
+  logger.info(
+    {
+      body: req.body,
+      user: req.user ? { userId: (req.user as any).userId } : "none",
+    },
+    "Receiving upload handshake request",
+  );
   try {
     const jsonResponse = await handleUpload({
       body: req.body as HandleUploadBody,

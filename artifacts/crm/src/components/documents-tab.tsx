@@ -107,7 +107,8 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
     const sanitizedFileName = file.name
       .replace(/\s+/g, "_")
       .replace(/[^a-zA-Z0-9._-]/g, "");
-    const uploadUrl = `${window.location.origin}/api/attachments/upload`;
+    // Usar caminho relativo para evitar problemas de CORS se o origin mudar
+    const uploadUrl = "/api/attachments/upload";
 
     console.log("Iniciando upload:", {
       originalName: file.name,
@@ -116,6 +117,7 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
       entityType,
       entityId,
       uploadUrl,
+      hasToken: !!accessToken,
     });
 
     try {
@@ -123,7 +125,6 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
         access: "public",
         handleUploadUrl: uploadUrl,
         clientPayload: JSON.stringify({ entityType, entityId }),
-        // O SDK do Vercel Blob passa os cabeçalhos adicionais para o endpoint handleUploadUrl
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
