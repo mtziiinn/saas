@@ -186,8 +186,8 @@ router.get("/:id/pdf", async (req, res) => {
 
     // Total line
     doc.moveTo(50, rowY + 5).lineTo(510, rowY + 5).stroke();
-    doc.moveDown(0.8);
-    doc.fontSize(10).font("Helvetica-Bold").text(`TOTAL: R$ ${total.toFixed(2)}`, 50, doc.y, { width: 460, align: "right" });
+    doc.moveDown(0.5);
+    doc.fontSize(12).font("Helvetica-Bold").text(`TOTAL: R$ ${total.toFixed(2)}`, 50, doc.y, { width: 460, align: "right" });
 
     // Notes
     if (quote.notes) {
