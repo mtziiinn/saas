@@ -193,16 +193,21 @@ export default function PatientPortal() {
             </CardHeader>
             <CardContent className="space-y-3">
               {prescriptions.map((rx: any) => (
-                <div key={rx.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-sm">{rx.medication}</h3>
-                    <span className="text-xs text-muted-foreground">{format(parseISO(rx.createdAt), "dd/MM/yyyy")}</span>
+                <div key={rx.id} className="flex gap-3 border rounded-lg p-4">
+                  <div className="shrink-0 p-2 rounded-md bg-green-50 dark:bg-green-950 h-fit">
+                    <Pill className="h-5 w-5 text-green-600" />
                   </div>
-                  <div className="flex gap-4 text-sm text-muted-foreground">
-                    <span><strong>Posologia:</strong> {rx.dosage}</span>
-                    <span><strong>Duração:</strong> {rx.duration}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-sm">{rx.medication}</h3>
+                      <span className="text-xs text-muted-foreground">{format(parseISO(rx.createdAt), "dd/MM/yyyy")}</span>
+                    </div>
+                    <div className="flex gap-4 text-sm text-muted-foreground">
+                      <span><strong>Posologia:</strong> {rx.dosage}</span>
+                      <span><strong>Duração:</strong> {rx.duration}</span>
+                    </div>
+                    {rx.notes && <p className="text-sm text-muted-foreground mt-2">{rx.notes}</p>}
                   </div>
-                  {rx.notes && <p className="text-sm text-muted-foreground mt-2">{rx.notes}</p>}
                 </div>
               ))}
             </CardContent>
