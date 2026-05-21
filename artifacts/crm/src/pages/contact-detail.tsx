@@ -321,10 +321,11 @@ export default function ContactDetail() {
               </DialogHeader>
               <form onSubmit={handleUpdate} className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nome</Label>
+                  <Label htmlFor="name">Nome completo *</Label>
                   <Input
                     id="name"
                     name="name"
+                    placeholder="Ex: Maria da Silva"
                     defaultValue={contact.name}
                     required
                   />
@@ -336,6 +337,7 @@ export default function ContactDetail() {
                       id="email"
                       name="email"
                       type="email"
+                      placeholder="paciente@email.com"
                       defaultValue={contact.email || ""}
                     />
                   </div>
@@ -344,6 +346,7 @@ export default function ContactDetail() {
                     <Input
                       id="phone"
                       name="phone"
+                      placeholder="Ex: (11) 99999-8888"
                       defaultValue={contact.phone || ""}
                     />
                   </div>
@@ -354,22 +357,24 @@ export default function ContactDetail() {
                     <Input
                       id="role"
                       name="role"
+                      placeholder="Ex: Advogado, Professor, Autônomo"
                       defaultValue={contact.role || ""}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="status">Status</Label>
                     <Select name="status" defaultValue={contact.status}>
-                      <SelectTrigger>
+                      <SelectTrigger id="status">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="lead">Potencial</SelectItem>
-                        <SelectItem value="prospect">Agendado</SelectItem>
-                        <SelectItem value="client">Ativo</SelectItem>
-                        <SelectItem value="churned">Inativo</SelectItem>
+                        <SelectItem value="lead">Potencial — primeiro contato</SelectItem>
+                        <SelectItem value="prospect">Agendado — consulta marcada</SelectItem>
+                        <SelectItem value="client">Ativo — paciente em tratamento</SelectItem>
+                        <SelectItem value="churned">Inativo — sem retorno</SelectItem>
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">Classifique o estágio do paciente.</p>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -380,7 +385,7 @@ export default function ContactDetail() {
                       contact.companyId ? String(contact.companyId) : ""
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="companyId">
                       <SelectValue placeholder="Nenhuma" />
                     </SelectTrigger>
                     <SelectContent>
@@ -391,6 +396,7 @@ export default function ContactDetail() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">Clínica à qual o paciente está vinculado.</p>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -411,12 +417,14 @@ export default function ContactDetail() {
                     value={recallDate}
                     onChange={(e) => setRecallDate(e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground">Data sugerida para retorno do paciente ao consultório.</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="notes">Observações</Label>
                   <Textarea
                     id="notes"
                     name="notes"
+                    placeholder="Alergias, contraindicações, preferências..."
                     defaultValue={contact.notes || ""}
                     rows={3}
                   />

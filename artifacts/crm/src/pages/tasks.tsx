@@ -2,6 +2,7 @@ import { useListTasks, useCompleteTask, getListTasksQueryKey, useDeleteTask, use
 import { Plus, Search, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Download, X, List, CalendarDays, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -170,62 +171,65 @@ export default function Tasks() {
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                    <label className="text-sm font-medium">Título *</label>
-                  <Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
+                  <Label htmlFor="taskTitle">Título *</Label>
+                  <Input id="taskTitle" placeholder="Ex: Consulta de avaliação — João Silva" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
                 </div>
                 <div className="space-y-2">
-                    <label className="text-sm font-medium">Descrição</label>
-                  <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                  <Label htmlFor="taskDesc">Descrição</Label>
+                  <textarea id="taskDesc" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Descreva o objetivo da consulta ou lembretes importantes..." className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Status</label>
+                    <Label htmlFor="taskStatus">Status</Label>
                     <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger id="taskStatus"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pending">Pendente</SelectItem>
-                        <SelectItem value="in_progress">Em Andamento</SelectItem>
-                        <SelectItem value="done">Concluído</SelectItem>
+                        <SelectItem value="pending">Pendente — aguardando realização</SelectItem>
+                        <SelectItem value="in_progress">Em Andamento — paciente em atendimento</SelectItem>
+                        <SelectItem value="done">Concluído — finalizado</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Prioridade</label>
+                    <Label htmlFor="taskPriority">Prioridade</Label>
                     <Select value={form.priority} onValueChange={v => setForm({ ...form, priority: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger id="taskPriority"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="low">Baixa</SelectItem>
-                        <SelectItem value="medium">Média</SelectItem>
-                        <SelectItem value="high">Alta</SelectItem>
+                        <SelectItem value="low">Baixa — pode esperar</SelectItem>
+                        <SelectItem value="medium">Média — atenção normal</SelectItem>
+                        <SelectItem value="high">Alta — urgente</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="space-y-2">
-                    <label className="text-sm font-medium">Data</label>
-                  <Input type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} />
+                  <Label htmlFor="taskDate">Data da consulta</Label>
+                  <Input id="taskDate" type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} />
+                  <p className="text-xs text-muted-foreground">Selecione a data prevista para o agendamento.</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Paciente</label>
+                    <Label htmlFor="taskContact">Paciente</Label>
                     <Select value={form.contactId} onValueChange={v => setForm({ ...form, contactId: v })}>
-                      <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                      <SelectTrigger id="taskContact"><SelectValue placeholder="Nenhum — agendamento geral" /></SelectTrigger>
                       <SelectContent>
                         {contacts?.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">Vincule ao paciente se esta consulta for para um paciente específico.</p>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Clínica</label>
+                    <Label htmlFor="taskCompany">Clínica</Label>
                     <Select value={form.companyId} onValueChange={v => setForm({ ...form, companyId: v })}>
-                      <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                      <SelectTrigger id="taskCompany"><SelectValue placeholder="Nenhuma" /></SelectTrigger>
                       <SelectContent>
                         {companies?.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">Selecione a clínica onde o atendimento será realizado.</p>
                   </div>
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 pt-2">
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
                   <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Salvando..." : "Salvar"}</Button>
                 </div>

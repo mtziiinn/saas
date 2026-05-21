@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Plus, Search, Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -105,46 +106,50 @@ export default function Contacts() {
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                    <label className="text-sm font-medium">Nome *</label>
-                  <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
-                  <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Phone</label>
-                  <Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Profissão</label>
-                  <Input value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} />
+                  <Label htmlFor="contactName">Nome completo *</Label>
+                  <Input id="contactName" placeholder="Ex: Maria da Silva" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Status</label>
+                    <Label htmlFor="contactEmail">Email</Label>
+                    <Input id="contactEmail" type="email" placeholder="paciente@email.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contactPhone">Telefone</Label>
+                    <Input id="contactPhone" placeholder="Ex: (11) 99999-8888" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contactRole">Profissão</Label>
+                  <Input id="contactRole" placeholder="Ex: Advogado, Professor, Autônomo" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="contactStatus">Status</Label>
                     <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger id="contactStatus"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {statusOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">Classifique o estágio do paciente no consultório.</p>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Clínica</label>
+                    <Label htmlFor="contactCompany">Clínica</Label>
                     <Select value={form.companyId} onValueChange={v => setForm({ ...form, companyId: v })}>
-                      <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                      <SelectTrigger id="contactCompany"><SelectValue placeholder="Nenhuma" /></SelectTrigger>
                       <SelectContent>
                         {companies?.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">Vincule o paciente a uma clínica, se aplicável.</p>
                   </div>
                 </div>
                 <div className="space-y-2">
-                    <label className="text-sm font-medium">Observações</label>
-                  <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                  <Label htmlFor="contactNotes">Observações</Label>
+                  <textarea id="contactNotes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Alergias, histórico relevante, preferências..." className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 pt-2">
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
                   <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Salvando..." : "Salvar"}</Button>
                 </div>

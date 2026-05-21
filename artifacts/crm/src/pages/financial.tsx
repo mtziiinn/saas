@@ -180,24 +180,24 @@ export default function Financial() {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
-                <Input id="description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required />
+                <Label htmlFor="description">Descrição *</Label>
+                <Input id="description" placeholder="Ex: Consulta de avaliação, Compra de materiais" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="type">Tipo</Label>
+                  <Label htmlFor="type">Tipo *</Label>
                   <Select value={form.type} onValueChange={v => setForm({ ...form, type: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger id="type"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="income">Receita</SelectItem>
-                      <SelectItem value="expense">Despesa</SelectItem>
+                      <SelectItem value="income">Receita — entrada de dinheiro</SelectItem>
+                      <SelectItem value="expense">Despesa — saída de dinheiro</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category">Categoria</Label>
+                  <Label htmlFor="category">Categoria *</Label>
                   <Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger id="category"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {categories.map(c => <SelectItem key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</SelectItem>)}
                     </SelectContent>
@@ -206,42 +206,44 @@ export default function Financial() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Valor (R$)</Label>
-                  <Input id="amount" type="text" inputMode="decimal" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} required />
+                  <Label htmlFor="amount">Valor (R$) *</Label>
+                  <Input id="amount" type="text" inputMode="decimal" placeholder="Ex: 250.00" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} required />
+                  <p className="text-xs text-muted-foreground">Use ponto como separador decimal (Ex: 150.50).</p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="date">Data</Label>
+                  <Label htmlFor="date">Data *</Label>
                   <Input id="date" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} required />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
+                  <Label htmlFor="status">Status *</Label>
                   <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger id="status"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="paid">Pago</SelectItem>
-                      <SelectItem value="cancelled">Cancelado</SelectItem>
+                      <SelectItem value="pending">Pendente — aguardando pagamento</SelectItem>
+                      <SelectItem value="paid">Pago — recebido/quitado</SelectItem>
+                      <SelectItem value="cancelled">Cancelado — não será cobrado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="paymentMethod">Método de Pagamento</Label>
                   <Select value={form.paymentMethod} onValueChange={v => setForm({ ...form, paymentMethod: v })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectTrigger id="paymentMethod"><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
                       {Object.entries(paymentLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">Como o pagamento foi ou será realizado.</p>
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="notes">Observações</Label>
-                <Textarea id="notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} />
+                <Textarea id="notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Informações adicionais sobre a transação..." rows={2} />
               </div>
               <div className="flex justify-end pt-2">
-                <Button type="submit">{editingId ? "Salvar" : "Criar"}</Button>
+                <Button type="submit">{editingId ? "Salvar Alterações" : "Criar Transação"}</Button>
               </div>
             </form>
           </DialogContent>

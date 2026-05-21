@@ -3,11 +3,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Plus, Search, AlertTriangle, ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { Package, Plus, Search, AlertTriangle, ArrowDown, ArrowUp, Trash2, FolderOpen, Tag, DollarSign, PackagePlus, Archive, Ruler } from "lucide-react";
 
 interface Category {
   id: number;
@@ -200,70 +201,110 @@ export default function Inventory() {
           )}
           <Dialog open={categoryOpen} onOpenChange={setCategoryOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">Nova Categoria</Button>
+              <Button variant="outline"><FolderOpen className="h-4 w-4 mr-1" />Nova Categoria</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Nova Categoria</DialogTitle></DialogHeader>
               <form onSubmit={handleCreateCategory} className="space-y-4">
-                <Input placeholder="Nome da categoria" value={categoryName} onChange={(e) => setCategoryName(e.target.value)} />
-                <Button type="submit" className="w-full">Criar</Button>
+                <div className="space-y-2">
+                  <Label htmlFor="catName">Nome da categoria</Label>
+                  <Input id="catName" placeholder="Ex: Material de Consumo, Medicamento, Instrumental" value={categoryName} onChange={(e) => setCategoryName(e.target.value)} />
+                  <p className="text-xs text-muted-foreground">Use nomes que facilitem a organização dos produtos no estoque.</p>
+                </div>
+                <Button type="submit" className="w-full">Criar Categoria</Button>
               </form>
             </DialogContent>
           </Dialog>
           <Dialog open={movementOpen} onOpenChange={setMovementOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">Registrar Movimentação</Button>
+              <Button variant="outline"><Archive className="h-4 w-4 mr-1" />Registrar Movimentação</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Registrar Movimentação</DialogTitle></DialogHeader>
               <form onSubmit={handleCreateMovement} className="space-y-4">
-                <Select value={movementForm.productId} onValueChange={(v) => setMovementForm({ ...movementForm, productId: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
-                  <SelectContent>
-                    {products.map((p) => (
-                      <SelectItem key={p.id} value={String(p.id)}>{p.name} ({p.quantity} em estoque)</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={movementForm.type} onValueChange={(v) => setMovementForm({ ...movementForm, type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="in">Entrada</SelectItem>
-                    <SelectItem value="out">Saída</SelectItem>
-                    <SelectItem value="adjustment">Ajuste</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input type="number" min="1" placeholder="Quantidade" value={movementForm.quantity} onChange={(e) => setMovementForm({ ...movementForm, quantity: e.target.value })} />
-                <Input placeholder="Motivo (opcional)" value={movementForm.reason} onChange={(e) => setMovementForm({ ...movementForm, reason: e.target.value })} />
-                <Button type="submit" className="w-full">Registrar</Button>
+                <div className="space-y-2">
+                  <Label htmlFor="movProduct">Produto</Label>
+                  <Select value={movementForm.productId} onValueChange={(v) => setMovementForm({ ...movementForm, productId: v })}>
+                    <SelectTrigger id="movProduct"><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
+                    <SelectContent>
+                      {products.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>{p.name} ({p.quantity} em estoque)</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="movType">Tipo de movimentação</Label>
+                  <Select value={movementForm.type} onValueChange={(v) => setMovementForm({ ...movementForm, type: v })}>
+                    <SelectTrigger id="movType"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="in">Entrada — adicionar produtos ao estoque</SelectItem>
+                      <SelectItem value="out">Saída — retirar produtos do estoque</SelectItem>
+                      <SelectItem value="adjustment">Ajuste — corrigir quantidade (perda, quebra, etc.)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">Entrada = compra ou devolução. Saída = uso ou descarte. Ajuste = correção de inventário.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="movQty">Quantidade</Label>
+                  <Input id="movQty" type="number" min="1" placeholder="Ex: 10" value={movementForm.quantity} onChange={(e) => setMovementForm({ ...movementForm, quantity: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="movReason">Motivo <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+                  <Input id="movReason" placeholder="Ex: Compra fornecedor XYZ, Uso em procedimento, Quebra acidental" value={movementForm.reason} onChange={(e) => setMovementForm({ ...movementForm, reason: e.target.value })} />
+                </div>
+                <Button type="submit" className="w-full">Registrar Movimentação</Button>
               </form>
             </DialogContent>
           </Dialog>
           <Dialog open={productOpen} onOpenChange={setProductOpen}>
             <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-1" />Novo Produto</Button>
+              <Button><PackagePlus className="h-4 w-4 mr-1" />Novo Produto</Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-md">
               <DialogHeader><DialogTitle>Novo Produto</DialogTitle></DialogHeader>
               <form onSubmit={handleCreateProduct} className="space-y-4">
-                <Input placeholder="Nome do produto" value={productForm.name} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} />
-                <Select value={productForm.categoryId} onValueChange={(v) => setProductForm({ ...productForm, categoryId: v })}>
-                  <SelectTrigger><SelectValue placeholder="Categoria" /></SelectTrigger>
-                  <SelectContent>
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="grid grid-cols-2 gap-4">
-                  <Input type="number" min="0" placeholder="Qtd inicial" value={productForm.quantity} onChange={(e) => setProductForm({ ...productForm, quantity: e.target.value })} />
-                  <Input type="number" min="0" placeholder="Estoque mínimo" value={productForm.minStock} onChange={(e) => setProductForm({ ...productForm, minStock: e.target.value })} />
+                <div className="space-y-2">
+                  <Label htmlFor="prodName">Nome do produto</Label>
+                  <Input id="prodName" placeholder="Ex: Luvas cirúrgicas tam. M, Anestésico Lidocaína 2%" value={productForm.name} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="prodCat">Categoria</Label>
+                  <Select value={productForm.categoryId} onValueChange={(v) => setProductForm({ ...productForm, categoryId: v })}>
+                    <SelectTrigger id="prodCat"><SelectValue placeholder="Selecione uma categoria" /></SelectTrigger>
+                    <SelectContent>
+                      {categories.length === 0 && <SelectItem value="" disabled>Nenhuma categoria — crie uma primeiro</SelectItem>}
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <Input type="number" step="0.01" min="0" placeholder="Preço de custo" value={productForm.costPrice} onChange={(e) => setProductForm({ ...productForm, costPrice: e.target.value })} />
-                  <Input type="number" step="0.01" min="0" placeholder="Preço de venda" value={productForm.salePrice} onChange={(e) => setProductForm({ ...productForm, salePrice: e.target.value })} />
+                  <div className="space-y-2">
+                    <Label htmlFor="prodQty">Quantidade inicial</Label>
+                    <Input id="prodQty" type="number" min="0" placeholder="Ex: 50" value={productForm.quantity} onChange={(e) => setProductForm({ ...productForm, quantity: e.target.value })} />
+                    <p className="text-xs text-muted-foreground">Quantidade atual em estoque ao cadastrar.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="prodMin">Estoque mínimo</Label>
+                    <Input id="prodMin" type="number" min="0" placeholder="Ex: 10" value={productForm.minStock} onChange={(e) => setProductForm({ ...productForm, minStock: e.target.value })} />
+                    <p className="text-xs text-muted-foreground">Quando atingir este valor, o sistema alertará para reposição.</p>
+                  </div>
                 </div>
-                <Button type="submit" className="w-full">Criar</Button>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="prodCost">Preço de custo (R$)</Label>
+                    <Input id="prodCost" type="number" step="0.01" min="0" placeholder="Ex: 15.90" value={productForm.costPrice} onChange={(e) => setProductForm({ ...productForm, costPrice: e.target.value })} />
+                    <p className="text-xs text-muted-foreground">Valor pago ao fornecedor por unidade.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="prodSale">Preço de venda (R$)</Label>
+                    <Input id="prodSale" type="number" step="0.01" min="0" placeholder="Ex: 35.00" value={productForm.salePrice} onChange={(e) => setProductForm({ ...productForm, salePrice: e.target.value })} />
+                    <p className="text-xs text-muted-foreground">Valor cobrado do paciente por unidade.</p>
+                  </div>
+                </div>
+                <Button type="submit" className="w-full">Cadastrar Produto</Button>
               </form>
             </DialogContent>
           </Dialog>

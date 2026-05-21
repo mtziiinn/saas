@@ -104,26 +104,28 @@ export default function CompanyDetail() {
               </DialogHeader>
               <form onSubmit={handleUpdate} className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nome</Label>
-                  <Input id="name" name="name" defaultValue={company?.name} required />
+                  <Label htmlFor="name">Nome da clínica *</Label>
+                  <Input id="name" name="name" placeholder="Ex: OdontoLife Clínica Odontológica" defaultValue={company?.name} required />
+                  <p className="text-xs text-muted-foreground">Nome fantasia ou razão social.</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="website">Website</Label>
-                    <Input id="website" name="website" defaultValue={company?.website || ""} />
+                    <Input id="website" name="website" placeholder="https://meusite.com.br" defaultValue={company?.website || ""} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="industry">Industry</Label>
-                    <Input id="industry" name="industry" defaultValue={company?.industry || ""} />
+                    <Label htmlFor="industry">Especialidade</Label>
+                    <Input id="industry" name="industry" placeholder="Ex: Ortodontia, Implantodontia" defaultValue={company?.industry || ""} />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="size">Porte</Label>
-                  <Input id="size" name="size" defaultValue={company?.size || ""} />
+                  <Input id="size" name="size" placeholder="Ex: Pequeno, Médio, Grande" defaultValue={company?.size || ""} />
+                  <p className="text-xs text-muted-foreground">Número aproximado de profissionais ou capacidade de atendimento.</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="notes">Observações</Label>
-                  <Textarea id="notes" name="notes" defaultValue={company?.notes || ""} rows={4} />
+                  <Textarea id="notes" name="notes" placeholder="Informações adicionais sobre a clínica..." defaultValue={company?.notes || ""} rows={4} />
                 </div>
                 <div className="flex justify-end pt-2">
                   <Button type="submit" disabled={updateMutation.isPending}>

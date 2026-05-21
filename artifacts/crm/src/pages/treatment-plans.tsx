@@ -252,28 +252,31 @@ export default function TreatmentPlans() {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label>Título *</Label>
-                <Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
+                <Label htmlFor="planTitle">Título do plano *</Label>
+                <Input id="planTitle" placeholder="Ex: Restauração e clareamento" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
+                <p className="text-xs text-muted-foreground">Nome que identifique o plano de tratamento.</p>
               </div>
               <div className="space-y-2">
-                <Label>Paciente *</Label>
+                <Label htmlFor="planPatient">Paciente *</Label>
                 <Select value={form.contactId} onValueChange={v => setForm({ ...form, contactId: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectTrigger id="planPatient"><SelectValue placeholder="Selecione um paciente" /></SelectTrigger>
                   <SelectContent>
                     {contacts.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">Paciente ao qual este plano se destina.</p>
               </div>
               <div className="space-y-2">
-                <Label>Descrição</Label>
-                <Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} />
+                <Label htmlFor="planDesc">Descrição</Label>
+                <Textarea id="planDesc" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Resumo do tratamento, observações relevantes..." rows={3} />
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label>Procedimentos</Label>
-                  <Button type="button" variant="outline" size="sm" onClick={addProcedure}>+ Adicionar</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={addProcedure}>+ Adicionar Procedimento</Button>
                 </div>
+                <p className="text-xs text-muted-foreground -mt-1">Adicione um ou mais procedimentos que compõem este plano.</p>
                 {form.procedures.map((proc, index) => (
                   <div key={index} className="border rounded-lg p-3 space-y-2 bg-muted/20">
                     <div className="flex items-center justify-between">
@@ -284,20 +287,22 @@ export default function TreatmentPlans() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="col-span-2">
-                        <Label className="text-xs">Nome</Label>
-                        <Input value={proc.procedureName} onChange={e => updateProcedure(index, "procedureName", e.target.value)} placeholder="Ex: Limpeza, Canal, Extração" className="h-8 text-sm" />
+                        <Label className="text-xs">Nome do procedimento</Label>
+                        <Input value={proc.procedureName} onChange={e => updateProcedure(index, "procedureName", e.target.value)} placeholder="Ex: Limpeza, Canal, Extração, Clareamento" className="h-8 text-sm" />
                       </div>
                       <div>
-                        <Label className="text-xs">Dente</Label>
-                        <Input type="number" value={proc.toothNumber || ""} onChange={e => updateProcedure(index, "toothNumber", e.target.value ? Number(e.target.value) : null)} className="h-8 text-sm" />
+                        <Label className="text-xs">N.º do dente</Label>
+                        <Input type="number" min={1} max={48} placeholder="Ex: 18" value={proc.toothNumber || ""} onChange={e => updateProcedure(index, "toothNumber", e.target.value ? Number(e.target.value) : null)} className="h-8 text-sm" />
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Opcional — número do elemento dental.</p>
                       </div>
                       <div>
-                        <Label className="text-xs">Região</Label>
-                        <Input value={proc.region || ""} onChange={e => updateProcedure(index, "region", e.target.value)} className="h-8 text-sm" />
+                        <Label className="text-xs">Região / Face</Label>
+                        <Input placeholder="Ex: MSE, Inferior D, Vestibular" value={proc.region || ""} onChange={e => updateProcedure(index, "region", e.target.value)} className="h-8 text-sm" />
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Opcional — localização na arcada.</p>
                       </div>
-                      <div>
-                        <Label className="text-xs">Valor (R$)</Label>
-                        <Input type="number" step="0.01" value={proc.value} onChange={e => updateProcedure(index, "value", e.target.value)} className="h-8 text-sm" />
+                      <div className="col-span-2">
+                        <Label className="text-xs">Valor (R$) *</Label>
+                        <Input type="number" step="0.01" min={0} placeholder="Ex: 250.00" value={proc.value} onChange={e => updateProcedure(index, "value", e.target.value)} className="h-8 text-sm" />
                       </div>
                     </div>
                   </div>
@@ -305,7 +310,7 @@ export default function TreatmentPlans() {
               </div>
 
               {form.procedures.length > 0 && (
-                <div className="flex justify-end text-sm font-medium">
+                <div className="flex justify-end text-sm font-semibold">
                   Total estimado: R$ {totalFormValue.toFixed(2)}
                 </div>
               )}

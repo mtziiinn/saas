@@ -215,32 +215,35 @@ export function ClinicalRecordTab({ contactId }: ClinicalRecordTabProps) {
                 <Plus className="h-4 w-4" /> Nova Nota
               </Button>
             </DialogTrigger>
-            <DialogContent>
+              <DialogContent>
               <DialogHeader>
                 <DialogTitle>Nova Nota Clínica</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label>Tipo</Label>
+                  <Label htmlFor="noteType">Tipo de nota</Label>
                   <Select value={noteType} onValueChange={(v) => setNoteType(v as any)}>
-                    <SelectTrigger>
+                    <SelectTrigger id="noteType">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="evolution">Evolução</SelectItem>
-                      <SelectItem value="prescription">Prescrição</SelectItem>
-                      <SelectItem value="observation">Observação</SelectItem>
+                      <SelectItem value="evolution">Evolução — andamento do tratamento</SelectItem>
+                      <SelectItem value="prescription">Prescrição — receita/medicação (use o formulário específico abaixo)</SelectItem>
+                      <SelectItem value="observation">Observação — informações gerais</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">Escolha o tipo de registro clínico que deseja criar.</p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Conteúdo</Label>
+                  <Label htmlFor="noteContent">Conteúdo</Label>
                   <Textarea
+                    id="noteContent"
                     value={noteContent}
                     onChange={(e) => setNoteContent(e.target.value)}
-                    placeholder="Descreva a evolução clínica..."
+                    placeholder="Descreva detalhadamente a evolução, observação ou prescrição..."
                     rows={5}
                   />
+                  <p className="text-xs text-muted-foreground">Mínimo de 10 caracteres. Seja objetivo e claro.</p>
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setNoteDialogOpen(false)}>
@@ -269,22 +272,25 @@ export function ClinicalRecordTab({ contactId }: ClinicalRecordTabProps) {
               </DialogHeader>
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label>Medicamento</Label>
-                  <Input value={medication} onChange={(e) => setMedication(e.target.value)} placeholder="Ex: Amoxicilina 500mg" />
+                  <Label htmlFor="rxMedication">Medicamento *</Label>
+                  <Input id="rxMedication" value={medication} onChange={(e) => setMedication(e.target.value)} placeholder="Ex: Amoxicilina 500mg" />
+                  <p className="text-xs text-muted-foreground">Nome do fármaco e concentração.</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Posologia</Label>
-                    <Input value={dosage} onChange={(e) => setDosage(e.target.value)} placeholder="Ex: 3x ao dia" />
+                    <Label htmlFor="rxDosage">Posologia *</Label>
+                    <Input id="rxDosage" value={dosage} onChange={(e) => setDosage(e.target.value)} placeholder="Ex: 3x ao dia" />
+                    <p className="text-xs text-muted-foreground">Frequência e modo de uso.</p>
                   </div>
                   <div className="space-y-2">
-                    <Label>Duração</Label>
-                    <Input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="Ex: 7 dias" />
+                    <Label htmlFor="rxDuration">Duração *</Label>
+                    <Input id="rxDuration" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="Ex: 7 dias" />
+                    <p className="text-xs text-muted-foreground">Por quantos dias o tratamento deve seguir.</p>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Observações</Label>
-                  <Textarea value={prescriptionNotes} onChange={(e) => setPrescriptionNotes(e.target.value)} placeholder="Instruções adicionais..." rows={3} />
+                  <Label htmlFor="rxNotes">Observações</Label>
+                  <Textarea id="rxNotes" value={prescriptionNotes} onChange={(e) => setPrescriptionNotes(e.target.value)} placeholder="Instruções adicionais: horários, jejum, advertências..." rows={3} />
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setPrescriptionDialogOpen(false)}>

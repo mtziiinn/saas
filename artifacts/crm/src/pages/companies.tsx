@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Plus, Search, Building2, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -62,28 +63,30 @@ export default function Companies() {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Nome *</label>
-                <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Website</label>
-                <Input value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} />
+                <Label htmlFor="companyName">Nome da clínica *</Label>
+                <Input id="companyName" placeholder="Ex: OdontoLife Clínica Odontológica" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+                <p className="text-xs text-muted-foreground">Nome fantasia ou razão social da clínica.</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Especialidade</label>
-                  <Input value={form.industry} onChange={e => setForm({ ...form, industry: e.target.value })} />
+                  <Label htmlFor="companyWebsite">Website</Label>
+                  <Input id="companyWebsite" placeholder="https://meusite.com.br" value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Porte</label>
-                  <Input value={form.size} onChange={e => setForm({ ...form, size: e.target.value })} />
+                  <Label htmlFor="companyIndustry">Especialidade</Label>
+                  <Input id="companyIndustry" placeholder="Ex: Ortodontia, Implantodontia, Geral" value={form.industry} onChange={e => setForm({ ...form, industry: e.target.value })} />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Observações</label>
-                <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                <Label htmlFor="companySize">Porte</Label>
+                <Input id="companySize" placeholder="Ex: Pequeno, Médio, Grande" value={form.size} onChange={e => setForm({ ...form, size: e.target.value })} />
+                <p className="text-xs text-muted-foreground">Número aproximado de profissionais ou capacidade de atendimento.</p>
               </div>
-              <div className="flex justify-end gap-2">
+              <div className="space-y-2">
+                <Label htmlFor="companyNotes">Observações</Label>
+                <textarea id="companyNotes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Informações adicionais sobre a clínica..." className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
                   <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Salvando..." : "Salvar"}</Button>
               </div>

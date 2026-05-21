@@ -184,34 +184,42 @@ export function QuotesTab({ contactId }: QuotesTabProps) {
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label>Título</Label>
-                <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Tratamento ortodôntico" />
+                <Label htmlFor="quoteTitle">Título do orçamento *</Label>
+                <Input id="quoteTitle" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Tratamento ortodôntico completo" />
+                <p className="text-xs text-muted-foreground">Nome para identificar este orçamento.</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Validade</Label>
-                  <Input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
+                  <Label htmlFor="quoteValidUntil">Validade</Label>
+                  <Input id="quoteValidUntil" type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
+                  <p className="text-xs text-muted-foreground">Data limite para o paciente aceitar o orçamento.</p>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Itens</Label>
+                <Label>Itens do orçamento</Label>
+                <div className="flex items-center gap-2 px-1 mb-1">
+                  <span className="flex-1 text-xs text-muted-foreground font-medium">Procedimento</span>
+                  <span className="w-16 text-center text-xs text-muted-foreground font-medium">Qtd</span>
+                  <span className="w-24 text-right text-xs text-muted-foreground font-medium">Valor unit.</span>
+                  <span className="w-8" />
+                </div>
                 {items.map((item, i) => (
                   <div key={i} className="flex gap-2 items-start">
                     <Input
                       className="flex-1"
-                      placeholder="Descrição do procedimento"
+                      placeholder="Ex: Limpeza, clareamento, restauração..."
                       value={item.description}
                       onChange={(e) => updateItem(i, "description", e.target.value)}
                     />
                     <Input
-                      className="w-16"
+                      className="w-16 text-center"
                       type="number"
                       min={1}
                       value={item.quantity}
                       onChange={(e) => updateItem(i, "quantity", Number(e.target.value))}
                     />
                     <Input
-                      className="w-24"
+                      className="w-24 text-right"
                       type="number"
                       min={0}
                       step="0.01"
@@ -228,10 +236,11 @@ export function QuotesTab({ contactId }: QuotesTabProps) {
                 </Button>
               </div>
               <div className="space-y-2">
-                <Label>Observações</Label>
-                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Condições de pagamento, garantias..." rows={3} />
+                <Label htmlFor="quoteNotes">Observações</Label>
+                <Textarea id="quoteNotes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Condições de pagamento, garantias, descontos..." rows={3} />
+                <p className="text-xs text-muted-foreground">Informações complementares que aparecerão no PDF.</p>
               </div>
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
                 <Button onClick={() => createMutation.mutate()} disabled={!title || createMutation.isPending}>
                   {createMutation.isPending ? "Salvando..." : "Salvar"}
