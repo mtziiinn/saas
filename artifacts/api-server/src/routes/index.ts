@@ -14,6 +14,7 @@ import patientPortalRouter from "./patient-portal";
 import attachmentsRouter from "./attachments";
 import clinicalRecordsRouter from "./clinical-records";
 import quotesRouter from "./quotes";
+import inventoryRouter from "./inventory";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(notificationsRouter);
 router.use("/attachments", attachmentsRouter);
 router.use("/clinical-records", clinicalRecordsRouter);
 router.use("/quotes", quotesRouter);
+router.use(inventoryRouter);
 
 export default router;

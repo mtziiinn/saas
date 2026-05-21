@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { treatmentPlansTable, treatmentProceduresTable, contactsTable, financialTransactionsTable } from "@workspace/db";
+import { treatmentPlansTable, treatmentProceduresTable, contactsTable, financialTransactionsTable, procedureProductsTable, productsTable, inventoryMovementsTable } from "@workspace/db";
 import { activityLogTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
+import { logger } from "../lib/logger";
 
 const router = Router();
 router.use(requireAuth);
@@ -126,10 +127,12 @@ router.patch("/treatment-plans/:id", async (req, res) => {
     await db.update(treatmentPlansTable).set(updateData).where(eq(treatmentPlansTable.id, id));
   }
 
+  let completedProcedureIds: number[] = [];
+
   if (procedures) {
     await db.delete(treatmentProceduresTable).where(eq(treatmentProceduresTable.planId, id));
     if (procedures.length > 0) {
-      await db.insert(treatmentProceduresTable).values(
+      const insertedProcedures = await db.insert(treatmentProceduresTable).values(
         procedures.map((p: { procedureName: string; toothNumber?: number; region?: string; value?: string | number; notes?: string; status?: string }) => ({
           planId: id,
           procedureName: p.procedureName,
@@ -139,8 +142,17 @@ router.patch("/treatment-plans/:id", async (req, res) => {
           status: p.status || "pending",
           notes: p.notes || null,
         }))
-      );
+      ).returning();
+
+      completedProcedureIds = insertedProcedures
+        .filter((p) => p.status === "completed")
+        .map((p) => p.id);
     }
+  }
+
+  // Auto-deduct stock for completed procedures
+  for (const procedureId of completedProcedureIds) {
+    await handleProcedureCompletion(procedureId);
   }
 
   const [plan] = await db
@@ -165,5 +177,90 @@ router.delete("/treatment-plans/:id", async (req, res) => {
   await db.delete(treatmentPlansTable).where(eq(treatmentPlansTable.id, id));
   res.status(204).send();
 });
+
+// ── Procedure Products ───────────────────────────────────
+
+router.get("/procedure-products/:procedureId", async (req, res) => {
+  const procedureId = Number(req.params.procedureId);
+  try {
+    const items = await db
+      .select({
+        id: procedureProductsTable.id,
+        procedureId: procedureProductsTable.procedureId,
+        productId: procedureProductsTable.productId,
+        quantity: procedureProductsTable.quantity,
+        productName: productsTable.name,
+      })
+      .from(procedureProductsTable)
+      .leftJoin(productsTable, eq(procedureProductsTable.productId, productsTable.id))
+      .where(eq(procedureProductsTable.procedureId, procedureId));
+    return res.json(items);
+  } catch (error) {
+    logger.error({ error }, "Error listing procedure products");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post("/procedure-products", async (req, res) => {
+  const { procedureId, productId, quantity } = req.body;
+  if (!procedureId || !productId) {
+    return res.status(400).json({ error: "procedureId e productId são obrigatórios" });
+  }
+  try {
+    const [item] = await db
+      .insert(procedureProductsTable)
+      .values({ procedureId: Number(procedureId), productId: Number(productId), quantity: Number(quantity) || 1 })
+      .returning();
+    logger.info({ procedureId, productId }, "Product linked to procedure");
+    return res.json(item);
+  } catch (error) {
+    logger.error({ error }, "Error linking product to procedure");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.delete("/procedure-products/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  try {
+    const [deleted] = await db.delete(procedureProductsTable).where(eq(procedureProductsTable.id, id)).returning();
+    if (!deleted) return res.status(404).json({ error: "Vínculo não encontrado" });
+    return res.status(204).end();
+  } catch (error) {
+    logger.error({ error }, "Error deleting procedure product link");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Auto-deduct stock when procedure is completed
+async function handleProcedureCompletion(procedureId: number) {
+  const products = await db
+    .select({
+      productId: procedureProductsTable.productId,
+      quantity: procedureProductsTable.quantity,
+    })
+    .from(procedureProductsTable)
+    .where(eq(procedureProductsTable.procedureId, procedureId));
+
+  for (const item of products) {
+    const [product] = await db.select().from(productsTable).where(eq(productsTable.id, item.productId));
+    if (!product) continue;
+
+    const newQty = product.quantity - item.quantity;
+    if (newQty < 0) {
+      logger.warn({ productId: item.productId, productName: product.name }, "Estoque insuficiente para procedimento");
+      continue;
+    }
+
+    await db.update(productsTable).set({ quantity: newQty, updatedAt: new Date() }).where(eq(productsTable.id, item.productId));
+    await db.insert(inventoryMovementsTable).values({
+      productId: item.productId,
+      type: "out",
+      quantity: -item.quantity,
+      reason: "procedimento",
+      procedureId,
+    });
+    logger.info({ productId: item.productId, quantity: item.quantity }, "Stock deducted for procedure");
+  }
+}
 
 export default router;

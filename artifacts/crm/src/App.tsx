@@ -17,6 +17,7 @@ import Settings from "@/pages/settings";
 import TreatmentPlans from "@/pages/treatment-plans";
 import Financial from "@/pages/financial";
 import PatientPortal from "@/pages/patient-portal";
+import Inventory from "@/pages/inventory";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,7 @@ function Router() {
               <Route path="/treatment-plans" component={TreatmentPlans} />
               <Route path="/treatment-plans/:id" component={TreatmentPlans} />
               <Route path="/financial" component={Financial} />
+              <Route path="/inventory" component={Inventory} />
               <Route path="/settings" component={Settings} />
               <Route component={NotFound} />
             </Switch>

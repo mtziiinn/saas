@@ -9,3 +9,4 @@ export * from "./notifications";
 export * from "./attachments";
 export * from "./clinical-records";
 export * from "./quotes";
+export * from "./inventory";

@@ -12,6 +12,8 @@ import {
   Stethoscope,
   FileText,
   DollarSign,
+  Package,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -28,6 +30,7 @@ const navigation = [
   { name: "Agendamentos", href: "/tasks", icon: CalendarClock },
   { name: "Planos de Tratamento", href: "/treatment-plans", icon: FileText },
   { name: "Financeiro", href: "/financial", icon: DollarSign },
+  { name: "Estoque", href: "/inventory", icon: Package },
 ];
 
 function GlobalSearch() {
@@ -157,7 +160,18 @@ function GlobalSearch() {
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, accessToken } = useAuth();
+  const [lowStockCount, setLowStockCount] = useState(0);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    fetch("/api/inventory/low-stock", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then((r) => r.json())
+      .then((data) => setLowStockCount(Array.isArray(data) ? data.length : 0))
+      .catch(() => {});
+  }, [accessToken]);
 
   const Sidebar = () => (
     <div className="flex h-full flex-col gap-y-5 bg-sidebar px-6 pb-4">
@@ -194,6 +208,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
                         aria-hidden="true"
                       />
                       {item.name}
+                      {item.name === "Estoque" && lowStockCount > 0 && (
+                        <span className="ml-auto flex items-center gap-1 text-xs font-semibold text-red-500">
+                          <AlertTriangle className="h-3 w-3" />
+                          {lowStockCount}
+                        </span>
+                      )}
                     </Link>
                   </li>
                 );
