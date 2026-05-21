@@ -126,13 +126,8 @@ router.get("/:id/pdf", async (req, res) => {
     // Header
     doc.fontSize(20).font("Helvetica-Bold").text("ORÇAMENTO", { align: "center" });
     doc.moveDown(0.5);
-    doc.fontSize(10).font("Helvetica").text(`Nº ${quote.id}`, { align: "center" });
+    doc.fontSize(14).font("Helvetica-Bold").text(contact?.name || "N/A", { align: "center" });
     doc.moveDown(1);
-
-    // Patient info
-    doc.fontSize(12).font("Helvetica-Bold").text("Paciente:");
-    doc.fontSize(10).font("Helvetica").text(contact?.name || "N/A");
-    doc.moveDown(0.5);
 
     if (quote.validUntil) {
       doc.fontSize(10).text(`Validade: ${new Date(quote.validUntil).toLocaleDateString("pt-BR")}`);
