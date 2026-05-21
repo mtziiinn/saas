@@ -120,7 +120,8 @@ router.get("/:id/pdf", async (req, res) => {
     const doc = new PDFDocument({ margin: 50, size: "A4" });
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="orcamento-${quote.id}.pdf"`);
+    const safeName = (contact?.name || "orcamento").replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
+    res.setHeader("Content-Disposition", `attachment; filename="${safeName}.pdf"`);
     doc.pipe(res);
 
     // Header
