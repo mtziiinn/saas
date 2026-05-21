@@ -143,7 +143,7 @@ router.get("/:id/pdf", async (req, res) => {
     const rowHeight = 20;
     
     // Column definitions: [x, width, align, header]
-    const cols = [
+    const cols: { x: number; w: number; align: "left" | "center" | "right"; h: string }[] = [
       { x: 50, w: 220, align: "left", h: "Descrição" },
       { x: 280, w: 50, align: "center", h: "Qtd" },
       { x: 340, w: 80, align: "right", h: "Unitário" },

@@ -104,8 +104,6 @@ router.get("/dashboard/contacts-by-status", async (req, res) => {
   res.json(rows);
 });
 
-export default router;
-
 router.get("/dashboard/pending-quotes", async (req, res) => {
   const rows = await db
     .select({
@@ -119,8 +117,10 @@ router.get("/dashboard/pending-quotes", async (req, res) => {
     })
     .from(quotesTable)
     .leftJoin(contactsTable, eq(quotesTable.contactId, contactsTable.id))
-    .where(sql`quotes.status IN ('draft', 'sent')`)
+    .where(sql`${quotesTable.status} IN ('draft', 'sent')`)
     .orderBy(quotesTable.createdAt);
 
   res.json(rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })));
 });
+
+export default router;
