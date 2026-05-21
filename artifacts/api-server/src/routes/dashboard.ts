@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { contactsTable, companiesTable, tasksTable, activityLogTable, financialTransactionsTable, quotesTable, commissionsTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 
 const router = Router();
@@ -111,6 +111,42 @@ router.get("/dashboard/contacts-by-status", async (req, res) => {
     .groupBy(contactsTable.status);
 
   res.json(rows);
+});
+
+router.get("/activity-log", async (req, res) => {
+  const { type, page, limit, startDate, endDate } = req.query;
+  const conditions = [];
+
+  if (type) conditions.push(eq(activityLogTable.type, type as string));
+  if (startDate) conditions.push(sql`${activityLogTable.createdAt} >= ${new Date(startDate as string)}`);
+  if (endDate) conditions.push(sql`${activityLogTable.createdAt} <= ${new Date(endDate as string)}`);
+
+  const pageNum = Math.max(1, Number(page) || 1);
+  const limitNum = Math.min(200, Math.max(1, Number(limit) || 50));
+  const offset = (pageNum - 1) * limitNum;
+
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [countResult] = await db
+    .select({ total: sql<number>`cast(count(*) as int)` })
+    .from(activityLogTable)
+    .where(where);
+
+  const rows = await db
+    .select()
+    .from(activityLogTable)
+    .where(where)
+    .orderBy(sql`${activityLogTable.createdAt} desc`)
+    .limit(limitNum)
+    .offset(offset);
+
+  res.json({
+    items: rows.map(r => ({ ...r, createdAt: r.createdAt.toISOString() })),
+    total: countResult.total,
+    page: pageNum,
+    limit: limitNum,
+    totalPages: Math.ceil(countResult.total / limitNum),
+  });
 });
 
 router.get("/dashboard/pending-quotes", async (req, res) => {

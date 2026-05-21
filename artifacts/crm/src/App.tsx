@@ -19,6 +19,7 @@ import Financial from "@/pages/financial";
 import PatientPortal from "@/pages/patient-portal";
 import Inventory from "@/pages/inventory";
 import Commissions from "@/pages/commissions";
+import ActivityLog from "@/pages/activity-log";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ function Router() {
               <Route path="/financial" component={Financial} />
               <Route path="/inventory" component={Inventory} />
               <Route path="/commissions" component={Commissions} />
+              <Route path="/activity-log" component={ActivityLog} />
               <Route path="/settings" component={Settings} />
               <Route component={NotFound} />
             </Switch>
