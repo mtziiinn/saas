@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { contactsTable, companiesTable, tasksTable, activityLogTable, financialTransactionsTable } from "@workspace/db";
+import { contactsTable, companiesTable, tasksTable, activityLogTable, financialTransactionsTable, quotesTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 
@@ -105,3 +105,22 @@ router.get("/dashboard/contacts-by-status", async (req, res) => {
 });
 
 export default router;
+
+router.get("/dashboard/pending-quotes", async (req, res) => {
+  const rows = await db
+    .select({
+      id: quotesTable.id,
+      title: quotesTable.title,
+      status: quotesTable.status,
+      contactId: quotesTable.contactId,
+      contactName: contactsTable.name,
+      validUntil: quotesTable.validUntil,
+      createdAt: quotesTable.createdAt,
+    })
+    .from(quotesTable)
+    .leftJoin(contactsTable, eq(quotesTable.contactId, contactsTable.id))
+    .where(sql`quotes.status IN ('draft', 'sent')`)
+    .orderBy(quotesTable.createdAt);
+
+  res.json(rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })));
+});

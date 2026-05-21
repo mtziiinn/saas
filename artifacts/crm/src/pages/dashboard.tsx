@@ -1,6 +1,6 @@
 import { useGetDashboardStats, useGetRecentActivity, useGetUpcomingTasks, useGetContactsByStatus } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building2, CheckSquare, AlertCircle, Activity, CalendarClock, UserPlus, TrendingUp, TrendingDown, Bell } from "lucide-react";
+import { Users, Building2, CheckSquare, AlertCircle, Activity, CalendarClock, UserPlus, TrendingUp, TrendingDown, Bell, FileText, Send, Check, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -9,7 +9,8 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, Resp
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { Link } from "wouter";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -18,6 +19,20 @@ export default function Dashboard() {
   const { data: activities, isLoading: activitiesLoading } = useGetRecentActivity();
   const { data: tasks, isLoading: tasksLoading } = useGetUpcomingTasks();
   const { data: contactsByStatus, isLoading: contactsByStatusLoading } = useGetContactsByStatus();
+
+  const [pendingQuotes, setPendingQuotes] = useState<any[]>([]);
+  const [quotesLoading, setQuotesLoading] = useState(true);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    fetch("/api/dashboard/pending-quotes", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then((r) => r.json())
+      .then(setPendingQuotes)
+      .catch(() => {})
+      .finally(() => setQuotesLoading(false));
+  }, [accessToken]);
 
   const STATUS_COLORS: Record<string, string> = {
     lead: "hsl(var(--primary))",
@@ -159,34 +174,76 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <UserPlus className="h-5 w-5 text-primary" />
-              Pacientes Recentes
+              <FileText className="h-5 w-5 text-primary" />
+              Orçamentos Pendentes
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {activitiesLoading ? (
+            {quotesLoading ? (
               <Skeleton className="h-20 w-full" />
-            ) : activities ? (
+            ) : pendingQuotes.length > 0 ? (
               <div className="space-y-3">
-                {activities.filter(a => a.type === 'contact_created').slice(0, 5).map(activity => (
-                  <div key={activity.id} className="flex items-center gap-3 border-b last:border-0 pb-3 last:pb-0">
-                    <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium">
-                      <UserPlus className="h-3 w-3" />
+                {pendingQuotes.slice(0, 5).map((q) => (
+                  <div key={q.id} className="flex items-start justify-between gap-2 border-b last:border-0 pb-3 last:pb-0">
+                    <div>
+                      <p className="font-medium text-sm">{q.title}</p>
+                      <p className="text-xs text-muted-foreground">{q.contactName || "Sem paciente"}</p>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm truncate">{activity.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(activity.createdAt), "d 'de' MMM", { locale: ptBR })}
-                      </p>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {q.status === "draft" && (
+                        <Button variant="ghost" size="icon" className="h-6 w-6" title="Enviar" onClick={() => {
+                          fetch(`/api/quotes/${q.id}/status`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+                            body: JSON.stringify({ status: "sent" }),
+                          }).then(() => {
+                            setPendingQuotes(prev => prev.filter(p => p.id !== q.id));
+                            toast({ title: "Orçamento enviado" });
+                          });
+                        }}>
+                          <Send className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                      {q.status === "sent" && (
+                        <>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600" title="Aceito" onClick={() => {
+                            fetch(`/api/quotes/${q.id}/status`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+                              body: JSON.stringify({ status: "accepted" }),
+                            }).then(() => {
+                              setPendingQuotes(prev => prev.filter(p => p.id !== q.id));
+                              toast({ title: "Orçamento aceito" });
+                            });
+                          }}>
+                            <Check className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" title="Recusado" onClick={() => {
+                            fetch(`/api/quotes/${q.id}/status`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+                              body: JSON.stringify({ status: "rejected" }),
+                            }).then(() => {
+                              setPendingQuotes(prev => prev.filter(p => p.id !== q.id));
+                              toast({ title: "Orçamento recusado" });
+                            });
+                          }}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </>
+                      )}
+                      <Badge variant="secondary" className="text-[10px]">{q.status === "draft" ? "Rascunho" : "Enviado"}</Badge>
                     </div>
                   </div>
                 ))}
-                {activities.filter(a => a.type === 'contact_created').length === 0 && (
-                  <p className="text-sm text-muted-foreground py-4 text-center">Nenhum paciente novo recentemente.</p>
+                {pendingQuotes.length > 5 && (
+                  <Link href="/quotes">
+                    <Button variant="ghost" size="sm" className="w-full text-xs">Ver todos ({pendingQuotes.length})</Button>
+                  </Link>
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">Nenhum paciente novo recentemente.</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">Nenhum orçamento pendente.</p>
             )}
           </CardContent>
         </Card>
