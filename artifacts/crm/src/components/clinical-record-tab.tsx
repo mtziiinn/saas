@@ -322,8 +322,8 @@ export function ClinicalRecordTab({ contactId }: ClinicalRecordTabProps) {
                 const typeInfo = typeLabels[item.type] || typeLabels.observation;
                 const Icon = typeInfo.icon;
                 return (
-                  <div key={`note-${item.id}`} className="flex gap-3 p-3 rounded-lg border bg-card">
-                    <div className={`shrink-0 p-2 rounded-md ${typeInfo.color}`}>
+                  <div key={`note-${item.id}`} className="flex gap-3 items-start p-3 rounded-lg border bg-card">
+                    <div className={`shrink-0 p-2 rounded-md ${typeInfo.color} h-fit`}>
                       <Icon className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -352,8 +352,8 @@ export function ClinicalRecordTab({ contactId }: ClinicalRecordTabProps) {
               }
 
               return (
-                <div key={`rx-${item.id}`} className="flex gap-3 p-3 rounded-lg border bg-card">
-                  <div className="shrink-0 p-2 rounded-md text-green-600 bg-green-50 dark:bg-green-950">
+                <div key={`rx-${item.id}`} className="flex gap-3 items-start p-3 rounded-lg border bg-card">
+                  <div className="shrink-0 p-2 rounded-md text-green-600 bg-green-50 dark:bg-green-950 h-fit">
                     <Pill className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
