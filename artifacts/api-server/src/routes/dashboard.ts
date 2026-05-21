@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { contactsTable, companiesTable, tasksTable, activityLogTable, financialTransactionsTable, quotesTable } from "@workspace/db";
+import { contactsTable, companiesTable, tasksTable, activityLogTable, financialTransactionsTable, quotesTable, commissionsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 
@@ -41,6 +41,12 @@ router.get("/dashboard/stats", async (req, res) => {
   const monthIncome = monthTx.filter(t => t.type === "income" && t.status === "paid").reduce((s, t) => s + Number(t.amount), 0);
   const monthExpense = monthTx.filter(t => t.type === "expense" && t.status === "paid").reduce((s, t) => s + Number(t.amount), 0);
 
+  const allCommissions = await db.select().from(commissionsTable);
+  const pendingCommissions = allCommissions.filter(c => c.status === "pending");
+  const pendingCommissionsAmount = pendingCommissions.reduce((s, c) => s + Number(c.commissionAmount), 0);
+  const pendingCommissionsCount = pendingCommissions.length;
+  const monthPendingCommissions = pendingCommissions.filter(c => new Date(c.createdAt) >= new Date(startOfMonth));
+
   res.json({
     totalContacts: totalContacts.count,
     totalCompanies: totalCompanies.count,
@@ -51,6 +57,9 @@ router.get("/dashboard/stats", async (req, res) => {
     newContactsThisMonth: newContactsThisMonth.count,
     monthIncome,
     monthExpense,
+    pendingCommissionsAmount,
+    pendingCommissionsCount,
+    monthPendingCommissions: monthPendingCommissions.reduce((s, c) => s + Number(c.commissionAmount), 0),
   });
 });
 

@@ -1,6 +1,6 @@
-import { useGetDashboardStats, useGetRecentActivity, useGetUpcomingTasks, useGetContactsByStatus } from "@workspace/api-client-react";
+import { useGetRecentActivity, useGetUpcomingTasks, useGetContactsByStatus } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building2, CheckSquare, AlertCircle, Activity, CalendarClock, UserPlus, TrendingUp, TrendingDown, Bell, FileText, Send, Check, X } from "lucide-react";
+import { Users, Building2, CheckSquare, AlertCircle, Activity, CalendarClock, UserPlus, TrendingUp, TrendingDown, Bell, FileText, Send, Check, X, Percent } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -15,16 +15,23 @@ import { Link } from "wouter";
 export default function Dashboard() {
   const { toast } = useToast();
   const { accessToken } = useAuth();
-  const { data: stats, isLoading: statsLoading } = useGetDashboardStats();
   const { data: activities, isLoading: activitiesLoading } = useGetRecentActivity();
   const { data: tasks, isLoading: tasksLoading } = useGetUpcomingTasks();
   const { data: contactsByStatus, isLoading: contactsByStatusLoading } = useGetContactsByStatus();
 
+  const [stats, setStats] = useState<any>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [pendingQuotes, setPendingQuotes] = useState<any[]>([]);
   const [quotesLoading, setQuotesLoading] = useState(true);
 
   useEffect(() => {
     if (!accessToken) return;
+    setStatsLoading(true);
+    fetch("/api/dashboard/stats", { headers: { Authorization: `Bearer ${accessToken}` } })
+      .then(r => r.json())
+      .then(setStats)
+      .catch(() => {})
+      .finally(() => setStatsLoading(false));
     fetch("/api/dashboard/pending-quotes", {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
@@ -85,7 +92,7 @@ export default function Dashboard() {
 
       {statsLoading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4, 5].map((i) => (
             <Card key={i}><CardContent className="p-6"><Skeleton className="h-16 w-full" /></CardContent></Card>
           ))}
         </div>
@@ -128,6 +135,16 @@ export default function Dashboard() {
             <CardContent>
               <div className="text-2xl font-bold text-destructive">{stats.tasksOverdue}</div>
                 <p className="text-xs text-destructive/80">Requer atenção</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-amber-600">Comissões Pendentes</CardTitle>
+              <Percent className="h-4 w-4 text-amber-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-amber-600">R$ {Number(stats.pendingCommissionsAmount || 0).toFixed(2)}</div>
+                <p className="text-xs text-amber-600/80">{stats.pendingCommissionsCount} comissão(ões) — R$ {Number(stats.monthPendingCommissions || 0).toFixed(2)} no mês</p>
             </CardContent>
           </Card>
         </div>
