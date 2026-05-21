@@ -31,7 +31,7 @@ router.post("/auth/register", async (req, res) => {
   const [user] = await db
     .insert(usersTable)
     .values({ name: body.data.name, email: body.data.email, password: hashed })
-    .returning();
+    .returning({ id: usersTable.id, name: usersTable.name, email: usersTable.email, role: usersTable.role });
 
   const payload = { userId: user.id, email: user.email, role: user.role };
   const accessToken = signAccessToken(payload);
@@ -64,7 +64,11 @@ router.post("/auth/login", async (req, res) => {
     return;
   }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, body.data.email)).limit(1);
+  const [user] = await db
+    .select({ id: usersTable.id, name: usersTable.name, email: usersTable.email, password: usersTable.password, role: usersTable.role })
+    .from(usersTable)
+    .where(eq(usersTable.email, body.data.email))
+    .limit(1);
   if (!user) {
     res.status(401).json({ error: { code: "INVALID_CREDENTIALS", message: "Invalid email or password" } });
     return;
