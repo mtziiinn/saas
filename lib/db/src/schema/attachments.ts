@@ -23,5 +23,5 @@ export const insertAttachmentSchema = createInsertSchema(attachmentsTable).omit(
   createdAt: true
 });
 
-export type InsertAttachment = z.infer<typeof insertAttachmentSchema>;
+export type InsertAttachment = typeof attachmentsTable.$inferInsert;
 export type Attachment = typeof attachmentsTable.$inferSelect;

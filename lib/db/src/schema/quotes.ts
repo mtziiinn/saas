@@ -20,7 +20,7 @@ export const insertQuoteSchema = createInsertSchema(quotesTable).omit({
   createdAt: true,
 });
 
-export type InsertQuote = z.infer<typeof insertQuoteSchema>;
+export type InsertQuote = typeof quotesTable.$inferInsert;
 export type Quote = typeof quotesTable.$inferSelect;
 
 export const quoteItemsTable = pgTable("quote_items", {
@@ -36,5 +36,5 @@ export const insertQuoteItemSchema = createInsertSchema(quoteItemsTable).omit({
   id: true,
 });
 
-export type InsertQuoteItem = z.infer<typeof insertQuoteItemSchema>;
+export type InsertQuoteItem = typeof quoteItemsTable.$inferInsert;
 export type QuoteItem = typeof quoteItemsTable.$inferSelect;

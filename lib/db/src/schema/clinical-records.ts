@@ -18,7 +18,7 @@ export const insertClinicalNoteSchema = createInsertSchema(clinicalNotesTable).o
   createdAt: true,
 });
 
-export type InsertClinicalNote = z.infer<typeof insertClinicalNoteSchema>;
+export type InsertClinicalNote = typeof clinicalNotesTable.$inferInsert;
 export type ClinicalNote = typeof clinicalNotesTable.$inferSelect;
 
 export const prescriptionsTable = pgTable("prescriptions", {
@@ -37,5 +37,5 @@ export const insertPrescriptionSchema = createInsertSchema(prescriptionsTable).o
   createdAt: true,
 });
 
-export type InsertPrescription = z.infer<typeof insertPrescriptionSchema>;
+export type InsertPrescription = typeof prescriptionsTable.$inferInsert;
 export type Prescription = typeof prescriptionsTable.$inferSelect;
