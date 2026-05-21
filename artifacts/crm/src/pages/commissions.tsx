@@ -6,10 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, CheckCircle2, Clock, Filter, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { DollarSign, CheckCircle2, Clock, Filter, Search, Settings, Users, Percent, Save } from "lucide-react";
 
 interface Commission {
   id: number;
@@ -36,6 +38,9 @@ interface Summary {
 interface User {
   id: number;
   name: string;
+  email: string;
+  role: string;
+  commissionPercentage: string;
 }
 
 export default function Commissions() {
@@ -47,6 +52,8 @@ export default function Commissions() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [professionalFilter, setProfessionalFilter] = useState("all");
   const [users, setUsers] = useState<User[]>([]);
+  const [usersDialogOpen, setUsersDialogOpen] = useState(false);
+  const [editingPct, setEditingPct] = useState<Record<number, string>>({});
 
   function fetchCommissions() {
     if (!accessToken) return;
@@ -67,17 +74,31 @@ export default function Commissions() {
       .finally(() => setLoading(false));
   }
 
+  function fetchUsers() {
+    if (!accessToken) return;
+    fetch("/api/users", { headers: { Authorization: `Bearer ${accessToken}` } })
+      .then(r => r.json())
+      .then(data => {
+        const list = Array.isArray(data) ? data : [];
+        setUsers(list);
+        const pct: Record<number, string> = {};
+        list.forEach((u: User) => { pct[u.id] = u.commissionPercentage; });
+        setEditingPct(pct);
+      })
+      .catch(() => {});
+  }
+
   useEffect(() => {
     fetchCommissions();
   }, [accessToken, statusFilter, professionalFilter]);
 
   useEffect(() => {
-    if (!accessToken) return;
-    fetch("/api/users", { headers: { Authorization: `Bearer ${accessToken}` } })
-      .then(r => r.json())
-      .then(data => setUsers(Array.isArray(data) ? data : []))
-      .catch(() => {});
+    fetchUsers();
   }, [accessToken]);
+
+  useEffect(() => {
+    if (usersDialogOpen) fetchUsers();
+  }, [usersDialogOpen]);
 
   async function handlePay(id: number) {
     try {
@@ -94,11 +115,92 @@ export default function Commissions() {
     }
   }
 
+  async function handleSavePercentage(userId: number) {
+    const pct = editingPct[userId];
+    if (pct === undefined) return;
+    const num = Number(pct);
+    if (isNaN(num) || num < 0 || num > 100) {
+      toast({ title: "Percentual inválido", description: "Deve ser entre 0 e 100", variant: "destructive" });
+      return;
+    }
+    try {
+      const res = await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({ commissionPercentage: num }),
+      });
+      if (!res.ok) throw new Error();
+      toast({ title: "Percentual atualizado" });
+      fetchUsers();
+    } catch {
+      toast({ title: "Erro ao salvar", variant: "destructive" });
+    }
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Comissões</h1>
-        <p className="text-muted-foreground mt-1">Gerencie as comissões dos profissionais por procedimento.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">Comissões</h1>
+          <p className="text-muted-foreground mt-1">Gerencie as comissões dos profissionais por procedimento.</p>
+        </div>
+        <Dialog open={usersDialogOpen} onOpenChange={setUsersDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Settings className="h-4 w-4" /> Configurar Profissionais
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Configurar Comissão dos Profissionais</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 pt-2">
+              <p className="text-sm text-muted-foreground">
+                Defina a porcentagem de comissão para cada profissional. O valor é aplicado automaticamente ao valor do procedimento quando concluído.
+              </p>
+              {users.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Nenhum profissional cadastrado.</p>
+              ) : (
+                <div className="space-y-2">
+                  {users.map(u => (
+                    <div key={u.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                      <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <Users className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{u.name}</p>
+                        <p className="text-xs text-muted-foreground">{u.email} — {u.role}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="relative w-20">
+                          <Input
+                            type="number"
+                            min={0}
+                            max={100}
+                            step="0.5"
+                            value={editingPct[u.id] ?? u.commissionPercentage}
+                            onChange={e => setEditingPct(p => ({ ...p, [u.id]: e.target.value }))}
+                            className="h-8 pr-6 text-sm text-right"
+                          />
+                          <Percent className="absolute right-2 top-2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => handleSavePercentage(u.id)}
+                          title="Salvar"
+                        >
+                          <Save className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {loading && !summary ? (

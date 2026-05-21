@@ -1,7 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { db } from "@workspace/db";
-import { usersTable, registerSchema, loginSchema } from "@workspace/db";
+import { usersTable, registerSchema, loginSchema, activityLogTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { signAccessToken, signRefreshToken, verifyToken } from "../lib/jwt";
 import { requireAuth } from "../middlewares/auth";
@@ -168,6 +168,40 @@ router.get("/users", requireAuth, async (_req, res) => {
     .from(usersTable)
     .orderBy(usersTable.name);
   res.json(users);
+});
+
+router.patch("/users/:id", requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } }); return; }
+
+  const { commissionPercentage } = req.body;
+  if (commissionPercentage === undefined) {
+    res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "commissionPercentage is required" } });
+    return;
+  }
+
+  const pct = Number(commissionPercentage);
+  if (isNaN(pct) || pct < 0 || pct > 100) {
+    res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "commissionPercentage must be between 0 and 100" } });
+    return;
+  }
+
+  const [user] = await db
+    .update(usersTable)
+    .set({ commissionPercentage: String(pct), updatedAt: new Date() })
+    .where(eq(usersTable.id, id))
+    .returning({ id: usersTable.id, name: usersTable.name, email: usersTable.email, role: usersTable.role, commissionPercentage: usersTable.commissionPercentage });
+
+  if (!user) { res.status(404).json({ error: { code: "NOT_FOUND", message: "User not found" } }); return; }
+
+  await db.insert(activityLogTable).values({
+    type: "commission_percentage_updated",
+    description: `Commission percentage for ${user.name} updated to ${pct}%`,
+    entityId: user.id,
+    entityName: user.name,
+  });
+
+  res.json({ user });
 });
 
 router.put("/auth/password", requireAuth, async (req, res) => {
