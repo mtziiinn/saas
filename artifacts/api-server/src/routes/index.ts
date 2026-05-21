@@ -13,6 +13,7 @@ import notificationsRouter from "./notifications";
 import patientPortalRouter from "./patient-portal";
 import attachmentsRouter from "./attachments";
 import clinicalRecordsRouter from "./clinical-records";
+import quotesRouter from "./quotes";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(financialRouter);
 router.use(notificationsRouter);
 router.use("/attachments", attachmentsRouter);
 router.use("/clinical-records", clinicalRecordsRouter);
+router.use("/quotes", quotesRouter);
 
 export default router;

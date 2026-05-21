@@ -62,6 +62,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { PatientTimeline } from "@/components/patient-timeline";
 import { DocumentsTab } from "@/components/documents-tab";
 import { ClinicalRecordTab } from "@/components/clinical-record-tab";
+import { QuotesTab } from "@/components/quotes-tab";
 
 export default function ContactDetail() {
   const [, params] = useRoute("/contacts/:id");
@@ -493,6 +494,8 @@ export default function ContactDetail() {
           <DocumentsTab entityType="contact" entityId={id} />
 
           <ClinicalRecordTab contactId={id} />
+
+          <QuotesTab contactId={id} />
 
           <Card>
             <CardHeader>
