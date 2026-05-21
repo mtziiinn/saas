@@ -28,16 +28,9 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
     ...options,
     headers: { "Content-Type": "application/json", ...options.headers as Record<string, string> },
   });
-
-  const contentType = res.headers.get("content-type");
-  if (contentType && contentType.includes("application/json")) {
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.error?.message || "Request failed");
-    return data;
-  } else {
-    const text = await res.text();
-    throw new Error(text || "Request failed");
-  }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error?.message || "Request failed");
+  return data;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
