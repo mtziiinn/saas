@@ -10,3 +10,4 @@ export * from "./attachments";
 export * from "./clinical-records";
 export * from "./quotes";
 export * from "./inventory";
+export * from "./commissions";

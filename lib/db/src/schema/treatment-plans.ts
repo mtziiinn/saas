@@ -2,6 +2,7 @@ import { pgTable, serial, text, integer, numeric, timestamp } from "drizzle-orm/
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { contactsTable } from "./contacts";
+import { usersTable } from "./users";
 
 export const treatmentPlansTable = pgTable("treatment_plans", {
   id: serial("id").primaryKey(),
@@ -22,6 +23,7 @@ export const treatmentProceduresTable = pgTable("treatment_procedures", {
   region: text("region"),
   value: numeric("value", { precision: 10, scale: 2 }).notNull().default("0"),
   status: text("status").notNull().default("pending"),
+  professionalId: integer("professional_id").references(() => usersTable.id, { onDelete: "set null" }),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

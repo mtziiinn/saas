@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { treatmentPlansTable, treatmentProceduresTable, contactsTable, financialTransactionsTable, procedureProductsTable, productsTable, inventoryMovementsTable } from "@workspace/db";
+import { treatmentPlansTable, treatmentProceduresTable, contactsTable, financialTransactionsTable, procedureProductsTable, productsTable, inventoryMovementsTable, usersTable, commissionsTable } from "@workspace/db";
 import { activityLogTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
@@ -67,12 +67,13 @@ router.post("/treatment-plans", async (req, res) => {
 
   if (procedures?.length) {
     await db.insert(treatmentProceduresTable).values(
-      procedures.map((p: { procedureName: string; toothNumber?: number; region?: string; value?: string | number; notes?: string }) => ({
+      procedures.map((p: { procedureName: string; toothNumber?: number; region?: string; value?: string | number; notes?: string; professionalId?: number | null }) => ({
         planId: plan.id,
         procedureName: p.procedureName,
         toothNumber: p.toothNumber || null,
         region: p.region || null,
         value: String(p.value || 0),
+        professionalId: p.professionalId || null,
         notes: p.notes || null,
       }))
     );
@@ -133,13 +134,14 @@ router.patch("/treatment-plans/:id", async (req, res) => {
     await db.delete(treatmentProceduresTable).where(eq(treatmentProceduresTable.planId, id));
     if (procedures.length > 0) {
       const insertedProcedures = await db.insert(treatmentProceduresTable).values(
-        procedures.map((p: { procedureName: string; toothNumber?: number; region?: string; value?: string | number; notes?: string; status?: string }) => ({
+        procedures.map((p: { procedureName: string; toothNumber?: number; region?: string; value?: string | number; notes?: string; status?: string; professionalId?: number | null }) => ({
           planId: id,
           procedureName: p.procedureName,
           toothNumber: p.toothNumber || null,
           region: p.region || null,
           value: String(p.value || 0),
           status: p.status || "pending",
+          professionalId: p.professionalId || null,
           notes: p.notes || null,
         }))
       ).returning();
@@ -231,7 +233,7 @@ router.delete("/procedure-products/:id", async (req, res) => {
   }
 });
 
-// Auto-deduct stock when procedure is completed
+// Auto-deduct stock and create commission when procedure is completed
 async function handleProcedureCompletion(procedureId: number) {
   const products = await db
     .select({
@@ -261,6 +263,47 @@ async function handleProcedureCompletion(procedureId: number) {
     });
     logger.info({ productId: item.productId, quantity: item.quantity }, "Stock deducted for procedure");
   }
+
+  // Auto-create commission if procedure has a professional assigned
+  const [procedure] = await db
+    .select()
+    .from(treatmentProceduresTable)
+    .where(eq(treatmentProceduresTable.id, procedureId));
+
+  if (!procedure || !procedure.professionalId) return;
+
+  const [professional] = await db
+    .select({ commissionPercentage: usersTable.commissionPercentage })
+    .from(usersTable)
+    .where(eq(usersTable.id, procedure.professionalId));
+
+  if (!professional || Number(professional.commissionPercentage) <= 0) return;
+
+  const procedureValue = Number(procedure.value);
+  const percentage = Number(professional.commissionPercentage);
+  const commissionAmount = (procedureValue * percentage) / 100;
+
+  if (commissionAmount <= 0) return;
+
+  const [existing] = await db
+    .select({ id: commissionsTable.id })
+    .from(commissionsTable)
+    .where(eq(commissionsTable.procedureId, procedureId))
+    .limit(1);
+
+  if (existing) return; // already created
+
+  await db.insert(commissionsTable).values({
+    procedureId: procedure.id,
+    professionalId: procedure.professionalId,
+    treatmentPlanId: procedure.planId,
+    procedureValue: String(procedureValue),
+    commissionPercentage: String(percentage),
+    commissionAmount: String(commissionAmount),
+    status: "pending",
+  });
+
+  logger.info({ procedureId, professionalId: procedure.professionalId, amount: commissionAmount }, "Commission auto-created");
 }
 
 export default router;

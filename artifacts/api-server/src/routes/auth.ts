@@ -162,6 +162,14 @@ router.put("/auth/profile", requireAuth, async (req, res) => {
   res.json({ user });
 });
 
+router.get("/users", requireAuth, async (_req, res) => {
+  const users = await db
+    .select({ id: usersTable.id, name: usersTable.name, email: usersTable.email, role: usersTable.role, commissionPercentage: usersTable.commissionPercentage })
+    .from(usersTable)
+    .orderBy(usersTable.name);
+  res.json(users);
+});
+
 router.put("/auth/password", requireAuth, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 

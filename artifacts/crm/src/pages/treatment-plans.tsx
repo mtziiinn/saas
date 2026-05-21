@@ -22,7 +22,15 @@ interface Procedure {
   region?: string;
   value: string;
   status?: string;
+  professionalId?: number | null;
   notes?: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  role: string;
+  commissionPercentage: string;
 }
 
 interface TreatmentPlan {
@@ -50,6 +58,7 @@ export default function TreatmentPlans() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [contacts, setContacts] = useState<{ id: number; name: string }[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   const [form, setForm] = useState({
     title: "",
@@ -77,6 +86,10 @@ export default function TreatmentPlans() {
     fetch("/api/contacts", { headers: { Authorization: `Bearer ${accessToken}` } })
       .then(r => r.json())
       .then(data => setContacts(Array.isArray(data) ? data.map((c: { id: number; name: string }) => ({ id: c.id, name: c.name })) : []))
+      .catch(() => {});
+    fetch("/api/users", { headers: { Authorization: `Bearer ${accessToken}` } })
+      .then(r => r.json())
+      .then(data => setUsers(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, [accessToken]);
 
@@ -299,6 +312,20 @@ export default function TreatmentPlans() {
                         <Label className="text-xs">Região / Face</Label>
                         <Input placeholder="Ex: MSE, Inferior D, Vestibular" value={proc.region || ""} onChange={e => updateProcedure(index, "region", e.target.value)} className="h-8 text-sm" />
                         <p className="text-[10px] text-muted-foreground mt-0.5">Opcional — localização na arcada.</p>
+                      </div>
+                      <div className="col-span-2">
+                        <Label className="text-xs">Profissional responsável</Label>
+                        <Select value={proc.professionalId ? String(proc.professionalId) : ""} onValueChange={v => updateProcedure(index, "professionalId", v ? Number(v) : null)}>
+                          <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Selecione o profissional" /></SelectTrigger>
+                          <SelectContent>
+                            {users.map(u => (
+                              <SelectItem key={u.id} value={String(u.id)}>
+                                {u.name} {Number(u.commissionPercentage) > 0 ? `(${u.commissionPercentage}%)` : ""}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Profissional que executará o procedimento (para cálculo de comissão).</p>
                       </div>
                       <div className="col-span-2">
                         <Label className="text-xs">Valor (R$) *</Label>

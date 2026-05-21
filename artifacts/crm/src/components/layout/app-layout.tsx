@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { 
+import {
   LayoutDashboard, 
   Users, 
   Building2, 
@@ -14,6 +14,7 @@ import {
   DollarSign,
   Package,
   AlertTriangle,
+  Percent,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -30,6 +31,7 @@ const navigation = [
   { name: "Agendamentos", href: "/tasks", icon: CalendarClock },
   { name: "Planos de Tratamento", href: "/treatment-plans", icon: FileText },
   { name: "Financeiro", href: "/financial", icon: DollarSign },
+  { name: "Comissões", href: "/commissions", icon: Percent },
   { name: "Estoque", href: "/inventory", icon: Package },
 ];
 
