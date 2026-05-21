@@ -4,6 +4,7 @@ import { quotesTable, quoteItemsTable, contactsTable } from "@workspace/db/schem
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { requireAuth } from "../middlewares/auth";
+import PDFDocument from "pdfkit";
 
 const router = Router();
 router.use(requireAuth);
@@ -107,8 +108,6 @@ router.get("/:id/pdf", async (req, res) => {
   const id = Number(req.params.id);
 
   try {
-    const PDFDocument = (await import("pdfkit")).default;
-
     const [quote] = await db.select().from(quotesTable).where(eq(quotesTable.id, id));
     if (!quote) return res.status(404).json({ error: "Orçamento não encontrado" });
 
