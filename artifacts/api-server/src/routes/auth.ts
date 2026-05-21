@@ -2,7 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { db } from "@workspace/db";
 import { usersTable, registerSchema, loginSchema, activityLogTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { signAccessToken, signRefreshToken, verifyToken } from "../lib/jwt";
 import { requireAuth } from "../middlewares/auth";
 
@@ -170,33 +170,102 @@ router.get("/users", requireAuth, async (_req, res) => {
   res.json(users);
 });
 
+router.post("/users", requireAuth, async (req, res) => {
+  const { name, email, password, role, commissionPercentage } = req.body;
+
+  if (!name || !email || !password) {
+    res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "name, email, and password are required" } });
+    return;
+  }
+
+  if (password.length < 8) {
+    res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "Password must be at least 8 characters" } });
+    return;
+  }
+
+  const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+  if (existing.length > 0) {
+    res.status(409).json({ error: { code: "EMAIL_TAKEN", message: "Email already in use" } });
+    return;
+  }
+
+  const hashed = await bcrypt.hash(password, 12);
+  const [user] = await db
+    .insert(usersTable)
+    .values({
+      name,
+      email,
+      password: hashed,
+      role: role || "user",
+      commissionPercentage: commissionPercentage !== undefined ? String(commissionPercentage) : "0",
+    })
+    .returning({ id: usersTable.id, name: usersTable.name, email: usersTable.email, role: usersTable.role, commissionPercentage: usersTable.commissionPercentage });
+
+  await db.insert(activityLogTable).values({
+    type: "user_created",
+    description: `User created: ${user.name} (${user.email})`,
+    entityId: user.id,
+    entityName: user.name,
+  });
+
+  res.status(201).json({ user });
+});
+
 router.patch("/users/:id", requireAuth, async (req, res) => {
   const id = Number(req.params.id);
   if (!id) { res.status(400).json({ error: { code: "INVALID_ID", message: "Invalid id" } }); return; }
 
-  const { commissionPercentage } = req.body;
-  if (commissionPercentage === undefined) {
-    res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "commissionPercentage is required" } });
+  const { name, email, role, commissionPercentage, password } = req.body;
+  const updateData: Record<string, unknown> = {};
+  let logMessage = "";
+
+  if (name !== undefined) { updateData.name = name; logMessage += `name: ${name}, `; }
+  if (email !== undefined) {
+    const existing = await db.select().from(usersTable).where(and(eq(usersTable.email, email), sql`id != ${id}`)).limit(1);
+    if (existing.length > 0) {
+      res.status(409).json({ error: { code: "EMAIL_TAKEN", message: "Email already in use" } });
+      return;
+    }
+    updateData.email = email;
+    logMessage += `email: ${email}, `;
+  }
+  if (role !== undefined) { updateData.role = role; logMessage += `role: ${role}, `; }
+  if (commissionPercentage !== undefined) {
+    const pct = Number(commissionPercentage);
+    if (isNaN(pct) || pct < 0 || pct > 100) {
+      res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "commissionPercentage must be between 0 and 100" } });
+      return;
+    }
+    updateData.commissionPercentage = String(pct);
+    logMessage += `commission: ${pct}%, `;
+  }
+  if (password !== undefined) {
+    if (password.length < 8) {
+      res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "Password must be at least 8 characters" } });
+      return;
+    }
+    updateData.password = await bcrypt.hash(password, 12);
+    logMessage += "password changed, ";
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "No fields to update" } });
     return;
   }
 
-  const pct = Number(commissionPercentage);
-  if (isNaN(pct) || pct < 0 || pct > 100) {
-    res.status(422).json({ error: { code: "VALIDATION_ERROR", message: "commissionPercentage must be between 0 and 100" } });
-    return;
-  }
+  updateData.updatedAt = new Date();
 
   const [user] = await db
     .update(usersTable)
-    .set({ commissionPercentage: String(pct), updatedAt: new Date() })
+    .set(updateData)
     .where(eq(usersTable.id, id))
     .returning({ id: usersTable.id, name: usersTable.name, email: usersTable.email, role: usersTable.role, commissionPercentage: usersTable.commissionPercentage });
 
   if (!user) { res.status(404).json({ error: { code: "NOT_FOUND", message: "User not found" } }); return; }
 
   await db.insert(activityLogTable).values({
-    type: "commission_percentage_updated",
-    description: `Commission percentage for ${user.name} updated to ${pct}%`,
+    type: "user_updated",
+    description: `User updated: ${user.name} — ${logMessage}`,
     entityId: user.id,
     entityName: user.name,
   });
