@@ -263,7 +263,25 @@ export function QuotesTab({ contactId }: QuotesTabProps) {
                     </div>
                     <div className="flex items-center gap-1">
                       <Badge variant={cfg.variant}>{cfg.label}</Badge>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(`/api/quotes/${quote.id}/pdf`, "_blank")}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={async () => {
+                        try {
+                          const res = await fetch(`/api/quotes/${quote.id}/pdf`, {
+                            headers: { Authorization: `Bearer ${accessToken}` },
+                          });
+                          if (!res.ok) throw new Error("Falha ao gerar PDF");
+                          const blob = await res.blob();
+                          const url = window.URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = `orcamento-${quote.id}.pdf`;
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                          window.URL.revokeObjectURL(url);
+                        } catch {
+                          toast({ title: "Erro ao baixar PDF", variant: "destructive" });
+                        }
+                      }}>
                         <Download className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => { if (confirm("Excluir?")) deleteMutation.mutate(quote.id); }}>
