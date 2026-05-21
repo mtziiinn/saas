@@ -140,35 +140,52 @@ router.get("/:id/pdf", async (req, res) => {
 
     // Items table header
     const tableTop = doc.y;
-    const colWidths = [250, 60, 80, 80];
-    const headers = ["Descrição", "Qtd", "Unitário", "Total"];
-    let xPos = 50;
+    const rowHeight = 20;
+    
+    // Column definitions: [x, width, align, header]
+    const cols = [
+      { x: 50, w: 220, align: "left", h: "Descrição" },
+      { x: 280, w: 50, align: "center", h: "Qtd" },
+      { x: 340, w: 80, align: "right", h: "Unitário" },
+      { x: 430, w: 80, align: "right", h: "Total" },
+    ];
 
+    // Header background
+    doc.fillColor("#f3f4f6");
+    doc.rect(40, tableTop - 5, 480, rowHeight + 5).fill();
+    doc.fillColor("#000000");
+
+    // Header text
     doc.fontSize(9).font("Helvetica-Bold");
-    headers.forEach((h, i) => {
-      doc.text(h, xPos, tableTop, { width: colWidths[i], align: i === 0 ? "left" : "right" });
-      xPos += colWidths[i];
+    cols.forEach((col) => {
+      doc.text(col.h, col.x, tableTop, { width: col.w, align: col.align });
     });
 
-    doc.moveTo(50, tableTop + 15).lineTo(500, tableTop + 15).stroke();
+    // Header underline
+    doc.moveTo(50, tableTop + rowHeight).lineTo(510, tableTop + rowHeight).stroke();
 
     // Items rows
     doc.fontSize(9).font("Helvetica");
-    let rowY = tableTop + 22;
-    items.forEach((item) => {
-      xPos = 50;
-      doc.text(item.description, xPos, rowY, { width: colWidths[0] });
-      xPos += colWidths[0];
-      doc.text(String(item.quantity), xPos, rowY, { width: colWidths[1], align: "right" });
-      xPos += colWidths[1];
-      doc.text(`R$ ${Number(item.unitPrice).toFixed(2)}`, xPos, rowY, { width: colWidths[2], align: "right" });
-      xPos += colWidths[2];
-      doc.text(`R$ ${Number(item.total).toFixed(2)}`, xPos, rowY, { width: colWidths[3], align: "right" });
-      rowY += 18;
+    let rowY = tableTop + rowHeight + 5;
+    
+    items.forEach((item, index) => {
+      // Alternating row background
+      if (index % 2 === 0) {
+        doc.fillColor("#f9fafb");
+        doc.rect(40, rowY - 4, 480, rowHeight).fill();
+        doc.fillColor("#000000");
+      }
+
+      doc.text(item.description, cols[0].x, rowY, { width: cols[0].w, align: "left" });
+      doc.text(String(item.quantity), cols[1].x, rowY, { width: cols[1].w, align: "center" });
+      doc.text(`R$ ${Number(item.unitPrice).toFixed(2)}`, cols[2].x, rowY, { width: cols[2].w, align: "right" });
+      doc.text(`R$ ${Number(item.total).toFixed(2)}`, cols[3].x, rowY, { width: cols[3].w, align: "right" });
+      
+      rowY += rowHeight;
     });
 
-    // Total
-    doc.moveTo(50, rowY + 5).lineTo(500, rowY + 5).stroke();
+    // Total line
+    doc.moveTo(50, rowY + 5).lineTo(510, rowY + 5).stroke();
     doc.moveDown(0.5);
     doc.fontSize(12).font("Helvetica-Bold").text(`TOTAL: R$ ${total.toFixed(2)}`, { align: "right" });
 
