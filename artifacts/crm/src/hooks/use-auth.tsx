@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 
 interface User {
@@ -28,15 +28,26 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
     ...options,
     headers: { "Content-Type": "application/json", ...options.headers as Record<string, string> },
   });
-  const data = await res.json();
+  const text = await res.text();
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`Resposta inválida do servidor (status ${res.status})`);
+  }
   if (!res.ok) throw new Error(data?.error?.message || "Request failed");
-  return data;
+  return data as T;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     setAuthTokenGetter(() => accessToken);
@@ -44,6 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     tryRefresh();
+    const interval = setInterval(tryRefresh, 15 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   async function tryRefresh() {
@@ -55,8 +68,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       setUser(me.user);
     } catch {
-      setUser(null);
-      setAccessToken(null);
+      if (!userRef.current) {
+        setUser(null);
+        setAccessToken(null);
+      }
     } finally {
       setIsLoading(false);
     }
