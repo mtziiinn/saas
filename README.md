@@ -15,16 +15,17 @@ CRM completo para clínicas odontológicas com gestão de pacientes, agendamento
 
 - **Dashboard:** Visão geral com faturamento mensal, comissões pendentes, agendamentos do dia e activity feed.
 - **Gestão de Pacientes:** Cadastro completo com ciclo de vida (lead, prospect, cliente, churned).
-- **Agendamentos:** Calendário e lista com filtros, prioridades e notificações.
-- **Planos de Tratamento:** Procedimentos com valores, status e vínculo com profissionais.
+- **Agendamentos:** Calendário mensal/semanal com horários, filtros, prioridades e notificações.
+- **Planos de Tratamento:** Procedimentos com valores, status e vínculo com profissionais e comissões.
 - **Prontuário Eletrônico:** Evoluições clínicas e observações (uso interno) + prescrições visíveis ao paciente.
 - **Orçamentos em PDF:** Criação de orçamentos com itens, status (rascunho, enviado, aceito, rejeitado) e download em PDF via pdfkit.
 - **Financeiro:** Controle de receitas e despesas, categorias, formas de pagamento, saldo mensal.
-- **Comissões Automáticas:** Percentual por profissional, criação automática ao concluir procedimento, filtros e baixa de pagamento.
+- **Comissões Automáticas:** Percentual por profissional, criação automática ao concluir procedimento, filtros, baixa de pagamento e dashboard.
 - **Controle de Estoque:** Categorias, produtos, movimentações (entrada/saída/ajuste), alerta de estoque baixo.
-- **Relatórios:** Exportação CSV de financeiro e comissões por período com filtros.
-- **Histórico de Atividades:** Timeline com filtros por tipo e data.
-- **Gerenciamento de Equipe:** Cadastro de profissionais com cargo e percentual de comissão.
+- **Relatórios:** Gráfico receitas vs despesas por mês, exportação CSV e PDF de financeiro e comissões com filtros por período.
+- **Histórico de Atividades:** Timeline com filtros por tipo e data, paginação.
+- **Gerenciamento de Equipe:** Cadastro de profissionais com cargo e percentual de comissão, ativação/desativação.
+- **Notificações:** Envio de lembretes por email via SMTP com template HTML, auto-disparo ao criar agendamento, preferência por paciente.
 - **Portal do Paciente:** Acesso externo via token para consulta de prescrições.
 - **Busca Global:** Pesquisa unificada de pacientes, clínicas, agendamentos, orçamentos, prescrições e evoluções.
 - **Documentos:** Upload e download seguro via Vercel Blob (stream pelo backend, token nunca exposto).
@@ -93,6 +94,7 @@ Monorepo com `pnpm workspaces`:
 | `pnpm typecheck` | Valida tipos em libs e artifacts |
 | `pnpm vercel:login` | Login no Vercel CLI |
 | `pnpm vercel:pull` | Puxa variáveis de ambiente do Vercel |
+| `pnpm db:backup` | Backup do PostgreSQL (pg_dump + gzip) |
 
 ---
 
@@ -118,6 +120,11 @@ O deploy é feito automaticamente pelo **Vercel** ao fazer push na branch `main`
 DATABASE_URL=postgres://...
 BLOB_READ_WRITE_TOKEN=vercel_blob_rw_...
 JWT_SECRET=seu_secret
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=seu@email.com
+SMTP_PASS=sua_senha
+SMTP_FROM=noreply@odontoflow.app
 ```
 
 ---
