@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { tasksTable, contactsTable, companiesTable } from "@workspace/db";
+import { notificationsTable } from "@workspace/db";
 import { activityLogTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import {
@@ -13,6 +14,7 @@ import {
   CompleteTaskParams,
 } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/auth";
+import { sendEmail, isEmailConfigured, buildReminderHtml } from "../services/email";
 
 const router = Router();
 router.use(requireAuth);
@@ -66,6 +68,32 @@ router.post("/tasks", async (req, res) => {
     return;
   }
   const [task] = await db.insert(tasksTable).values(body.data).returning();
+
+  if (body.data.contactId && body.data.dueDate) {
+    const [contact] = await db
+      .select({ name: contactsTable.name, email: contactsTable.email, allowNotifications: contactsTable.allowNotifications })
+      .from(contactsTable)
+      .where(eq(contactsTable.id, body.data.contactId));
+
+    if (contact && contact.email && contact.allowNotifications) {
+      const data = body.data as any;
+      const dateStr = data.dueDate;
+      const timeStr = data.startTime ? ` às ${data.startTime}` : "";
+      const message = `Lembrete: Você tem uma consulta agendada para ${dateStr}${timeStr}. ${task.title}`;
+      const html = buildReminderHtml(contact.name, message);
+      const sent = isEmailConfigured() ? await sendEmail(contact.email, "Lembrete de Consulta - OdontoFlow", html) : false;
+
+      await db.insert(notificationsTable).values({
+        contactId: body.data.contactId,
+        taskId: task.id,
+        type: "email",
+        channel: sent ? "email" : "simulado",
+        recipient: sent ? contact.email : `${contact.email} (simulado)`,
+        message,
+        status: "sent",
+      });
+    }
+  }
 
   await db.insert(activityLogTable).values({
     type: "task_created",

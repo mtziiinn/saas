@@ -37,8 +37,8 @@ export interface Contact {
   companyName?: string | null;
   /** @nullable */
   recallDate?: string | null;
+  allowNotifications?: number;
   createdAt: string;
-}
 
 export type ContactInputStatus = typeof ContactInputStatus[keyof typeof ContactInputStatus];
 
@@ -60,6 +60,7 @@ export interface ContactInput {
   notes?: string;
   /** @nullable */
   companyId?: number | null;
+  allowNotifications?: number;
 }
 
 export type ContactUpdateStatus = typeof ContactUpdateStatus[keyof typeof ContactUpdateStatus];
@@ -88,6 +89,7 @@ export interface ContactUpdate {
   companyId?: number | null;
   /** @nullable */
   recallDate?: string | null;
+  allowNotifications?: number;
 }
 
 export interface Company {

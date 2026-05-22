@@ -269,6 +269,8 @@ export const ListTasksResponseItem = zod.object({
   "status": zod.enum(['pending', 'in_progress', 'done']),
   "priority": zod.enum(['low', 'medium', 'high']),
   "dueDate": zod.string().nullish(),
+  "startTime": zod.string().nullish(),
+  "endTime": zod.string().nullish(),
   "contactId": zod.number().nullish(),
   "contactName": zod.string().nullish(),
   "companyId": zod.number().nullish(),
@@ -290,6 +292,8 @@ export const CreateTaskBody = zod.object({
   "status": zod.enum(['pending', 'in_progress', 'done']),
   "priority": zod.enum(['low', 'medium', 'high']),
   "dueDate": zod.string().optional(),
+  "startTime": zod.string().optional(),
+  "endTime": zod.string().optional(),
   "contactId": zod.number().nullish(),
   "companyId": zod.number().nullish()
 })
@@ -309,6 +313,8 @@ export const GetTaskResponse = zod.object({
   "status": zod.enum(['pending', 'in_progress', 'done']),
   "priority": zod.enum(['low', 'medium', 'high']),
   "dueDate": zod.string().nullish(),
+  "startTime": zod.string().nullish(),
+  "endTime": zod.string().nullish(),
   "contactId": zod.number().nullish(),
   "contactName": zod.string().nullish(),
   "companyId": zod.number().nullish(),
@@ -333,6 +339,8 @@ export const UpdateTaskBody = zod.object({
   "status": zod.enum(['pending', 'in_progress', 'done']).optional(),
   "priority": zod.enum(['low', 'medium', 'high']).optional(),
   "dueDate": zod.string().nullish(),
+  "startTime": zod.string().nullish(),
+  "endTime": zod.string().nullish(),
   "contactId": zod.number().nullish(),
   "companyId": zod.number().nullish()
 })
@@ -344,6 +352,8 @@ export const UpdateTaskResponse = zod.object({
   "status": zod.enum(['pending', 'in_progress', 'done']),
   "priority": zod.enum(['low', 'medium', 'high']),
   "dueDate": zod.string().nullish(),
+  "startTime": zod.string().nullish(),
+  "endTime": zod.string().nullish(),
   "contactId": zod.number().nullish(),
   "contactName": zod.string().nullish(),
   "companyId": zod.number().nullish(),
@@ -374,6 +384,8 @@ export const CompleteTaskResponse = zod.object({
   "status": zod.enum(['pending', 'in_progress', 'done']),
   "priority": zod.enum(['low', 'medium', 'high']),
   "dueDate": zod.string().nullish(),
+  "startTime": zod.string().nullish(),
+  "endTime": zod.string().nullish(),
   "contactId": zod.number().nullish(),
   "contactName": zod.string().nullish(),
   "companyId": zod.number().nullish(),

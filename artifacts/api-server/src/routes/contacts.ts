@@ -40,6 +40,7 @@ router.get("/contacts", async (req, res) => {
       status: contactsTable.status,
       notes: contactsTable.notes,
       recallDate: contactsTable.recallDate,
+      allowNotifications: contactsTable.allowNotifications,
       companyId: contactsTable.companyId,
       companyName: companiesTable.name,
       createdAt: contactsTable.createdAt,
@@ -81,6 +82,7 @@ router.post("/contacts", async (req, res) => {
       status: contactsTable.status,
       notes: contactsTable.notes,
       recallDate: contactsTable.recallDate,
+      allowNotifications: contactsTable.allowNotifications,
       companyId: contactsTable.companyId,
       companyName: companiesTable.name,
       createdAt: contactsTable.createdAt,
@@ -108,6 +110,7 @@ router.get("/contacts/:id", async (req, res) => {
       status: contactsTable.status,
       notes: contactsTable.notes,
       recallDate: contactsTable.recallDate,
+      allowNotifications: contactsTable.allowNotifications,
       companyId: contactsTable.companyId,
       companyName: companiesTable.name,
       createdAt: contactsTable.createdAt,
@@ -133,6 +136,7 @@ router.patch("/contacts/:id", async (req, res) => {
 
   const updateData: Record<string, unknown> = { ...body.data, updatedAt: new Date() };
   if (req.body.recallDate !== undefined) updateData.recallDate = req.body.recallDate || null;
+  if (req.body.allowNotifications !== undefined) updateData.allowNotifications = req.body.allowNotifications;
 
   const [updated] = await db
     .update(contactsTable)
@@ -162,6 +166,7 @@ router.patch("/contacts/:id", async (req, res) => {
       status: contactsTable.status,
       notes: contactsTable.notes,
       recallDate: contactsTable.recallDate,
+      allowNotifications: contactsTable.allowNotifications,
       companyId: contactsTable.companyId,
       companyName: companiesTable.name,
       createdAt: contactsTable.createdAt,

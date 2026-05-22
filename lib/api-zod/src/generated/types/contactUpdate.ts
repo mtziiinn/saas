@@ -21,4 +21,7 @@ export interface ContactUpdate {
   notes?: string | null;
   /** @nullable */
   companyId?: number | null;
+  /** @nullable */
+  recallDate?: string | null;
+  allowNotifications?: number;
 }

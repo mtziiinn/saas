@@ -472,6 +472,8 @@ components:
           type: ["string", "null"]
         recallDate:
           type: ["string", "null"]
+        allowNotifications:
+          type: integer
         createdAt:
           type: string
 
@@ -495,6 +497,8 @@ components:
           type: string
         companyId:
           type: ["integer", "null"]
+        allowNotifications:
+          type: integer
 
     ContactUpdate:
       type: object
@@ -517,6 +521,8 @@ components:
           type: ["integer", "null"]
         recallDate:
           type: ["string", "null"]
+        allowNotifications:
+          type: integer
 
     # ── Company schemas ──────────────────────────────────────────────────────
     Company:

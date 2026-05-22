@@ -25,5 +25,6 @@ export interface Contact {
   companyName?: string | null;
   /** @nullable */
   recallDate?: string | null;
+  allowNotifications?: number;
   createdAt: string;
 }

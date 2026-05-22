@@ -74,6 +74,7 @@ export default function ContactDetail() {
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [recallDate, setRecallDate] = useState("");
+  const [allowNotifications, setAllowNotifications] = useState(true);
   const [timelineItems, setTimelineItems] = useState<any[]>([]);
   const [finances, setFinances] = useState<any>(null);
   const [portalToken, setPortalToken] = useState<string | null>(null);
@@ -112,6 +113,12 @@ export default function ContactDetail() {
     if (!contact?.recallDate) return;
     setRecallDate(contact.recallDate);
   }, [contact?.recallDate]);
+
+  useEffect(() => {
+    if (contact?.allowNotifications !== undefined) {
+      setAllowNotifications(!!contact.allowNotifications);
+    }
+  }, [contact?.allowNotifications]);
 
   useEffect(() => {
     if (!accessToken || !id) return;
@@ -225,6 +232,7 @@ export default function ContactDetail() {
       notes: formData.get("notes") as string,
       companyId: companyId ? Number(companyId) : null,
       recallDate: recallDate || null,
+      allowNotifications: allowNotifications ? 1 : 0,
     };
 
     updateMutation.mutate({ id, data } as any, {
@@ -418,6 +426,19 @@ export default function ContactDetail() {
                     onChange={(e) => setRecallDate(e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground">Data sugerida para retorno do paciente ao consultório.</p>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="allowNotifications">Notificações</Label>
+                    <p className="text-xs text-muted-foreground">Enviar lembretes automáticos por email</p>
+                  </div>
+                  <input
+                    id="allowNotifications"
+                    type="checkbox"
+                    checked={allowNotifications}
+                    onChange={(e) => setAllowNotifications(e.target.checked)}
+                    className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="notes">Observações</Label>

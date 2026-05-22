@@ -17,4 +17,5 @@ export interface ContactInput {
   notes?: string;
   /** @nullable */
   companyId?: number | null;
+  allowNotifications?: number;
 }
