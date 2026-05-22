@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   Percent,
   Activity,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -33,6 +34,7 @@ const navigation = [
   { name: "Planos de Tratamento", href: "/treatment-plans", icon: FileText },
   { name: "Financeiro", href: "/financial", icon: DollarSign },
   { name: "Comissões", href: "/commissions", icon: Percent },
+  { name: "Relatórios", href: "/reports", icon: BarChart3 },
   { name: "Histórico", href: "/activity-log", icon: Activity },
   { name: "Estoque", href: "/inventory", icon: Package },
 ];

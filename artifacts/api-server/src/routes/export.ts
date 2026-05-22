@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { contactsTable, tasksTable, companiesTable } from "@workspace/db";
-import { sql } from "drizzle-orm";
+import { contactsTable, tasksTable, companiesTable, financialTransactionsTable, commissionsTable, usersTable } from "@workspace/db";
+import { eq, and, sql, gte, lte } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 
 const router = Router();
@@ -91,6 +91,101 @@ router.get("/tasks/export", async (req, res) => {
 
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", 'attachment; filename="tasks.csv"');
+  res.send(csv);
+});
+
+router.get("/financial/export", async (req, res) => {
+  const { type, category, status, startDate, endDate } = req.query;
+  const conditions = [];
+  if (type) conditions.push(eq(financialTransactionsTable.type, type as string));
+  if (category) conditions.push(eq(financialTransactionsTable.category, category as string));
+  if (status) conditions.push(eq(financialTransactionsTable.status, status as string));
+  if (startDate) conditions.push(gte(financialTransactionsTable.date, new Date(startDate as string)));
+  if (endDate) conditions.push(lte(financialTransactionsTable.date, new Date(endDate as string)));
+
+  const rows = await db
+    .select({
+      id: financialTransactionsTable.id,
+      description: financialTransactionsTable.description,
+      type: financialTransactionsTable.type,
+      category: financialTransactionsTable.category,
+      amount: financialTransactionsTable.amount,
+      date: financialTransactionsTable.date,
+      status: financialTransactionsTable.status,
+      paymentMethod: financialTransactionsTable.paymentMethod,
+      contactName: contactsTable.name,
+      notes: financialTransactionsTable.notes,
+      createdAt: financialTransactionsTable.createdAt,
+    })
+    .from(financialTransactionsTable)
+    .leftJoin(contactsTable, eq(financialTransactionsTable.contactId, contactsTable.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(sql`${financialTransactionsTable.date} desc`);
+
+  const csv = toCsv(
+    ["ID", "Description", "Type", "Category", "Amount", "Date", "Status", "Payment Method", "Patient", "Notes", "Created At"],
+    rows.map((r) => [
+      r.id,
+      r.description,
+      r.type,
+      r.category,
+      r.amount,
+      r.date.toISOString(),
+      r.status,
+      r.paymentMethod,
+      r.contactName,
+      r.notes,
+      r.createdAt.toISOString(),
+    ])
+  );
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", `attachment; filename="financial-${new Date().toISOString().split("T")[0]}.csv"`);
+  res.send(csv);
+});
+
+router.get("/commissions/export", async (req, res) => {
+  const { status, professionalId, startDate, endDate } = req.query;
+  const conditions = [];
+  if (status) conditions.push(eq(commissionsTable.status, status as string));
+  if (professionalId) conditions.push(eq(commissionsTable.professionalId, Number(professionalId)));
+  if (startDate) conditions.push(gte(commissionsTable.createdAt, new Date(startDate as string)));
+  if (endDate) conditions.push(lte(commissionsTable.createdAt, new Date(endDate as string)));
+
+  const rows = await db
+    .select({
+      id: commissionsTable.id,
+      professionalName: usersTable.name,
+      procedureValue: commissionsTable.procedureValue,
+      commissionPercentage: commissionsTable.commissionPercentage,
+      commissionAmount: commissionsTable.commissionAmount,
+      status: commissionsTable.status,
+      paidAt: commissionsTable.paidAt,
+      notes: commissionsTable.notes,
+      createdAt: commissionsTable.createdAt,
+    })
+    .from(commissionsTable)
+    .leftJoin(usersTable, eq(commissionsTable.professionalId, usersTable.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(sql`${commissionsTable.createdAt} desc`);
+
+  const csv = toCsv(
+    ["ID", "Professional", "Procedure Value", "Commission %", "Commission Amount", "Status", "Paid At", "Notes", "Created At"],
+    rows.map((r) => [
+      r.id,
+      r.professionalName,
+      r.procedureValue,
+      r.commissionPercentage,
+      r.commissionAmount,
+      r.status,
+      r.paidAt?.toISOString() || "",
+      r.notes,
+      r.createdAt.toISOString(),
+    ])
+  );
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", `attachment; filename="commissions-${new Date().toISOString().split("T")[0]}.csv"`);
   res.send(csv);
 });
 

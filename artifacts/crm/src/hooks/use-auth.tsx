@@ -1,3 +1,5 @@
+﻿"use client"
+
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 
@@ -43,34 +45,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const userRef = useRef(user);
+  
+  const tokenRef = useRef<string | null>(null);
+  const userRef = useRef<User | null>(null);
 
   useEffect(() => {
     userRef.current = user;
   }, [user]);
 
   useEffect(() => {
-    setAuthTokenGetter(() => accessToken);
-  }, [accessToken]);
+    setAuthTokenGetter(() => tokenRef.current);
+  }, []);
+
+  const updateAuth = (newUser: User | null, newAccessToken: string | null) => {
+    tokenRef.current = newAccessToken;
+    setAccessToken(newAccessToken);
+    setUser(newUser);
+    userRef.current = newUser;
+  };
 
   useEffect(() => {
     tryRefresh();
-    const interval = setInterval(tryRefresh, 15 * 60 * 1000);
+    // Refresh slightly before expiry (14 minutes instead of 15)
+    const interval = setInterval(tryRefresh, 14 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
   async function tryRefresh() {
     try {
       const data = await apiFetch<{ accessToken: string }>("/api/auth/refresh", { method: "POST" });
-      setAccessToken(data.accessToken);
+      tokenRef.current = data.accessToken;
       const me = await apiFetch<{ user: User }>("/api/auth/me", {
         headers: { Authorization: `Bearer ${data.accessToken}` },
       });
-      setUser(me.user);
-    } catch {
-      if (!userRef.current) {
-        setUser(null);
-        setAccessToken(null);
+      updateAuth(me.user, data.accessToken);
+    } catch (err) {
+      // If refresh fails and we were logged in, log out to be safe
+      if (userRef.current) {
+        updateAuth(null, null);
       }
     } finally {
       setIsLoading(false);
@@ -82,8 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
-    setUser(data.user);
-    setAccessToken(data.accessToken);
+    updateAuth(data.user, data.accessToken);
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
@@ -91,12 +102,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       method: "POST",
       body: JSON.stringify({ name, email, password }),
     });
-    setUser(data.user);
-    setAccessToken(data.accessToken);
+    updateAuth(data.user, data.accessToken);
   }, []);
 
   const refreshUser = useCallback((user: User) => {
-    setUser(user);
+    updateAuth(user, tokenRef.current);
   }, []);
 
   const logout = useCallback(async () => {
@@ -104,8 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiFetch("/api/auth/logout", { method: "POST" });
     } catch {
     } finally {
-      setUser(null);
-      setAccessToken(null);
+      updateAuth(null, null);
     }
   }, []);
 
