@@ -110,7 +110,7 @@ export default function Inventory() {
         fetchProducts();
       } else {
         const err = await res.json();
-        toast({ title: err.error || "Erro ao criar produto" });
+        toast({ title: err.error?.message || err.error || "Erro ao criar produto" });
       }
     } catch {
       toast({ title: "Erro ao criar produto" });
@@ -151,7 +151,7 @@ export default function Inventory() {
         fetchProducts();
       } else {
         const err = await res.json();
-        toast({ title: err.error || "Erro ao registrar movimentação" });
+        toast({ title: err.error?.message || err.error || "Erro ao registrar movimentação" });
       }
     } catch {
       toast({ title: "Erro ao registrar movimentação" });
@@ -174,7 +174,7 @@ export default function Inventory() {
         fetchCategories();
       } else {
         const err = await res.json();
-        toast({ title: err.error || "Erro ao criar categoria" });
+        toast({ title: err.error?.message || err.error || "Erro ao criar categoria" });
       }
     } catch {
       toast({ title: "Erro ao criar categoria" });

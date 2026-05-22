@@ -139,7 +139,7 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Falha no upload");
+        throw new Error(err.error?.message || err.error || "Falha no upload");
       }
 
       toast({
