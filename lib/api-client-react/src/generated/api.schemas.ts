@@ -39,6 +39,7 @@ export interface Contact {
   recallDate?: string | null;
   allowNotifications?: number;
   createdAt: string;
+}
 
 export type ContactInputStatus = typeof ContactInputStatus[keyof typeof ContactInputStatus];
 
