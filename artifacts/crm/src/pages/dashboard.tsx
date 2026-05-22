@@ -17,13 +17,13 @@ export default function Dashboard() {
   const { accessToken } = useAuth();
   
   const { data: activities, isLoading: activitiesLoading } = useGetRecentActivity({
-    query: { enabled: !!accessToken }
+    query: { queryKey: [], enabled: !!accessToken }
   });
   const { data: tasks, isLoading: tasksLoading } = useGetUpcomingTasks({
-    query: { enabled: !!accessToken }
+    query: { queryKey: [], enabled: !!accessToken }
   });
   const { data: contactsByStatus, isLoading: contactsByStatusLoading } = useGetContactsByStatus({
-    query: { enabled: !!accessToken }
+    query: { queryKey: [], enabled: !!accessToken }
   });
 
   const [stats, setStats] = useState<any>(null);
