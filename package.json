@@ -8,7 +8,8 @@
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
     "vercel:login": "vercel login",
-    "vercel:pull": "vercel env pull .env.local"
+    "vercel:pull": "vercel env pull .env.local",
+    "db:backup": "bash scripts/backup-db.sh"
   },
   "private": true,
   "devDependencies": {
