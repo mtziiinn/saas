@@ -590,6 +590,10 @@ components:
           enum: [low, medium, high]
         dueDate:
           type: ["string", "null"]
+        startTime:
+          type: ["string", "null"]
+        endTime:
+          type: ["string", "null"]
         contactId:
           type: ["integer", "null"]
         contactName:
@@ -618,6 +622,10 @@ components:
           enum: [low, medium, high]
         dueDate:
           type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
         contactId:
           type: ["integer", "null"]
         companyId:
@@ -639,96 +647,14 @@ components:
           enum: [low, medium, high]
         dueDate:
           type: ["string", "null"]
+        startTime:
+          type: ["string", "null"]
+        endTime:
+          type: ["string", "null"]
         contactId:
           type: ["integer", "null"]
         companyId:
           type: ["integer", "null"]
-
-    # ── Dashboard schemas ────────────────────────────────────────────────────
-    DashboardStats:
-      type: object
-      required: [totalContacts, totalCompanies, totalTasks, tasksDueToday, tasksOverdue, tasksDone, newContactsThisMonth]
-      properties:
-        totalContacts:
-          type: integer
-        totalCompanies:
-          type: integer
-        totalTasks:
-          type: integer
-        tasksDueToday:
-          type: integer
-        tasksOverdue:
-          type: integer
-        tasksDone:
-          type: integer
-        newContactsThisMonth:
-          type: integer
-        monthIncome:
-          type: number
-        monthExpense:
-          type: number
-
-    ActivityItem:
-      type: object
-      required: [id, type, description, createdAt]
-      properties:
-        id:
-          type: integer
-        type:
-          type: string
-          enum: [contact_created, company_created, task_created, task_completed, contact_updated]
-        description:
-          type: string
-        entityId:
-          type: ["integer", "null"]
-        entityName:
-          type: ["string", "null"]
-        createdAt:
-          type: string
-
-    StatusCount:
-      type: object
-      required: [status, count]
-      properties:
-        status:
-          type: string
-        count:
-          type: integer
-
-    # ── Search schemas ────────────────────────────────────────────────────────
-    SearchResultContact:
-      type: object
-      required: [id, name, status, type]
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        email:
-          type: ["string", "null"]
-        status:
-          type: string
-        companyName:
-          type: ["string", "null"]
-        type:
-          type: string
-          enum: [contact]
-
-    SearchResultCompany:
-      type: object
-      required: [id, name, type]
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        industry:
-          type: ["string", "null"]
-        contactCount:
-          type: integer
-        type:
-          type: string
-          enum: [company]
 
     SearchResultTask:
       type: object

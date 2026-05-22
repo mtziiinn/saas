@@ -155,6 +155,10 @@ export interface Task {
   /** @nullable */
   dueDate?: string | null;
   /** @nullable */
+  startTime?: string | null;
+  /** @nullable */
+  endTime?: string | null;
+  /** @nullable */
   contactId?: number | null;
   /** @nullable */
   contactName?: string | null;
@@ -190,6 +194,8 @@ export interface TaskInput {
   status: TaskInputStatus;
   priority: TaskInputPriority;
   dueDate?: string;
+  startTime?: string;
+  endTime?: string;
   /** @nullable */
   contactId?: number | null;
   /** @nullable */
@@ -223,6 +229,10 @@ export interface TaskUpdate {
   priority?: TaskUpdatePriority;
   /** @nullable */
   dueDate?: string | null;
+  /** @nullable */
+  startTime?: string | null;
+  /** @nullable */
+  endTime?: string | null;
   /** @nullable */
   contactId?: number | null;
   /** @nullable */

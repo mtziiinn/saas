@@ -24,6 +24,8 @@ const taskWithRelations = {
   status: tasksTable.status,
   priority: tasksTable.priority,
   dueDate: tasksTable.dueDate,
+  startTime: tasksTable.startTime,
+  endTime: tasksTable.endTime,
   clinicalNotes: tasksTable.clinicalNotes,
   contactId: tasksTable.contactId,
   contactName: contactsTable.name,

@@ -18,6 +18,10 @@ export interface TaskUpdate {
   /** @nullable */
   dueDate?: string | null;
   /** @nullable */
+  startTime?: string | null;
+  /** @nullable */
+  endTime?: string | null;
+  /** @nullable */
   contactId?: number | null;
   /** @nullable */
   companyId?: number | null;

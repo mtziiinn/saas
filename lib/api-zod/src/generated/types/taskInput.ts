@@ -15,6 +15,8 @@ export interface TaskInput {
   status: TaskInputStatus;
   priority: TaskInputPriority;
   dueDate?: string;
+  startTime?: string;
+  endTime?: string;
   /** @nullable */
   contactId?: number | null;
   /** @nullable */

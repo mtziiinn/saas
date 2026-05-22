@@ -53,7 +53,7 @@ export default function Tasks() {
     });
   }, [tasks, debouncedSearch, filterStatus, filterPriority, filterDate]);
 
-  const [form, setForm] = useState({ title: "", description: "", status: "pending", priority: "medium", dueDate: "", contactId: "", companyId: "" });
+  const [form, setForm] = useState({ title: "", description: "", status: "pending", priority: "medium", dueDate: "", startTime: "", endTime: "", contactId: "", companyId: "" });
 
   function handleExport() {
     if (!accessToken) return;
@@ -71,14 +71,14 @@ export default function Tasks() {
     e.preventDefault();
     if (!form.title.trim()) return;
     createMutation.mutate(
-      { data: { title: form.title, description: form.description || undefined, status: form.status as any, priority: form.priority as any, dueDate: form.dueDate || undefined, contactId: form.contactId ? Number(form.contactId) : null, companyId: form.companyId ? Number(form.companyId) : null } },
+      { data: { title: form.title, description: form.description || undefined, status: form.status as any, priority: form.priority as any, dueDate: form.dueDate || undefined, startTime: form.startTime || undefined, endTime: form.endTime || undefined, contactId: form.contactId ? Number(form.contactId) : null, companyId: form.companyId ? Number(form.companyId) : null } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
           queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
           toast({ title: "Agendamento criado" });
           setOpen(false);
-          setForm({ title: "", description: "", status: "pending", priority: "medium", dueDate: "", contactId: "", companyId: "" });
+          setForm({ title: "", description: "", status: "pending", priority: "medium", dueDate: "", startTime: "", endTime: "", contactId: "", companyId: "" });
         },
       }
     );
@@ -146,6 +146,10 @@ export default function Tasks() {
     setView("list");
   }
 
+  function handleSelectAppointment(id: number) {
+    navigate("/tasks");
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -206,6 +210,16 @@ export default function Tasks() {
                   <Label htmlFor="taskDate">Data da consulta</Label>
                   <Input id="taskDate" type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} />
                   <p className="text-xs text-muted-foreground">Selecione a data prevista para o agendamento.</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="taskStartTime">Horário início</Label>
+                    <Input id="taskStartTime" type="time" value={form.startTime} onChange={e => setForm({ ...form, startTime: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="taskEndTime">Horário fim</Label>
+                    <Input id="taskEndTime" type="time" value={form.endTime} onChange={e => setForm({ ...form, endTime: e.target.value })} />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -298,7 +312,7 @@ export default function Tasks() {
 
       {view === "calendar" ? (
         <Card className="overflow-hidden border shadow-sm p-4">
-          <AppointmentCalendar appointments={tasks || []} onSelectDate={handleSelectCalendarDate} />
+          <AppointmentCalendar appointments={tasks || []} onSelectDate={handleSelectCalendarDate} onSelectAppointment={handleSelectAppointment} />
         </Card>
       ) : (
         <Card className="overflow-hidden border shadow-sm">
@@ -346,6 +360,8 @@ export default function Tasks() {
                         <span className="flex items-center gap-1 text-xs">
                           <Clock className="h-3 w-3" />
                           {format(new Date(task.dueDate), "MMM d")}
+                          {task.startTime && ` ${task.startTime}`}
+                          {task.endTime && `-${task.endTime}`}
                         </span>
                       )}
                     </div>
