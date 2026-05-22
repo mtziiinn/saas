@@ -82,7 +82,7 @@ export default function Dashboard() {
     }
   }
 
-  const getStatusColor = (status: string) => STATUS_COLORS[status.toLowerCase()] || STATUS_COLORS.churned;
+  const getStatusColor = (status: string) => STATUS_COLORS[status?.toLowerCase()] || STATUS_COLORS.churned;
 
   const taskChartData = stats ? [
     { name: "Concluídos", count: stats.tasksDone, fill: "hsl(var(--primary))" },
@@ -91,7 +91,7 @@ export default function Dashboard() {
   ] : [];
 
   const activityIcon = (type: string) => {
-    switch (type.toLowerCase()) {
+    switch (type?.toLowerCase() ?? "") {
       case "contact": return <UserPlus className="w-4 h-4 text-primary" />;
       case "task": return <CheckSquare className="w-4 h-4 text-orange-500" />;
       case "quote": return <FileText className="w-4 h-4 text-blue-500" />;
