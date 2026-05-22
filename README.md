@@ -77,11 +77,14 @@ Monorepo com `pnpm workspaces`:
 
 ## Segurança
 
-- Autenticação JWT com refresh token
-- Validação de entrada (Zod) em todas as rotas
+- Autenticação JWT com refresh token (httpOnly, SameSite)
+- Validação de entrada (Zod) nas principais rotas (auth, contacts, companies, tasks)
 - Upload de arquivos validado por MIME-type, armazenamento privado
 - Download de blobs streamado pelo backend (token nunca exposto)
-- Queries parametrizadas (Drizzle ORM)
+- Queries parametrizadas (Drizzle ORM) — sem SQL injection
+- Formato de erro padronizado: `{ error: { code, message } }` em todas as rotas
+- Tratamento de erros com try/catch em todas as rotas críticas (upload, PDF, inventory)
+- Token de acesso do portal do paciente nunca exposto em respostas da API
 
 ---
 
@@ -126,6 +129,14 @@ SMTP_USER=seu@email.com
 SMTP_PASS=sua_senha
 SMTP_FROM=noreply@odontoflow.app
 ```
+
+---
+
+## Performance
+
+- **Code-splitting:** Todas as páginas são carregadas sob demanda via `React.lazy()`. O bundle inicial contém apenas ~200 kB (core React + layout).
+- **Vendor chunks:** Libs pesadas (recharts, lucide-react, date-fns) são separadas em chunks independentes para caching otimizado.
+- **Skeleton loading:** Transições entre páginas exibem skeleton placeholders; sidebar e header permanecem visíveis durante o carregamento.
 
 ---
 
