@@ -99,7 +99,7 @@ export function AppointmentCalendar({ appointments, onSelectDate, onSelectAppoin
 
       {view === "week" ? (
         <div className="overflow-x-auto">
-          <div className="min-w-[700px]">
+          <div className="min-w-175">
             <div className="grid grid-cols-8 gap-px bg-border rounded-t-lg overflow-hidden">
               <div className="bg-muted/50 px-2 py-2 text-center text-xs font-medium text-muted-foreground" />
               {days.map(day => (
@@ -116,7 +116,7 @@ export function AppointmentCalendar({ appointments, onSelectDate, onSelectAppoin
             </div>
             <div className="divide-y border-x border-b rounded-b-lg">
               {HOURS.map(hour => (
-                <div key={hour} className="grid grid-cols-8 gap-px min-h-[48px]">
+                <div key={hour} className="grid grid-cols-8 gap-px min-h-12">
                   <div className="px-2 py-1 text-xs text-muted-foreground text-right pr-3 pt-2">
                     {String(hour).padStart(2, "0")}:00
                   </div>
@@ -134,7 +134,7 @@ export function AppointmentCalendar({ appointments, onSelectDate, onSelectAppoin
                       <button
                         key={`${key}-${hour}`}
                         onClick={() => onSelectDate?.(day)}
-                        className={`relative min-h-[48px] p-0.5 text-left transition-colors hover:bg-muted/30 ${
+                        className={`relative min-h-12 p-0.5 text-left transition-colors hover:bg-muted/30 ${
                           isTodayDate ? "bg-primary/5" : "bg-card"
                         }`}
                       >

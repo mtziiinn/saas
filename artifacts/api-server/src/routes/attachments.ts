@@ -77,7 +77,7 @@ function parseMultipart(req: Request): Promise<ParsedResult> {
 router.post("/upload", async (req, res) => {
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     logger.error("BLOB_READ_WRITE_TOKEN is missing");
-    return res.status(500).json({ error: "Storage configuration error" });
+    return res.status(500).json({ error: { code: "CONFIG_ERROR", message: "Erro de configuração de armazenamento" } });
   }
 
   try {
@@ -85,11 +85,11 @@ router.post("/upload", async (req, res) => {
     const { entityType, entityId } = fields;
 
     if (!entityType || !entityId) {
-      return res.status(400).json({ error: "entityType e entityId são obrigatórios" });
+      return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "entityType e entityId são obrigatórios" } });
     }
 
     if (!ALLOWED_TYPES.includes(file.mimetype)) {
-      return res.status(400).json({ error: "Tipo de arquivo não permitido" });
+      return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Tipo de arquivo não permitido" } });
     }
 
     const userId = (req.user as any).userId;
@@ -117,10 +117,10 @@ router.post("/upload", async (req, res) => {
       .returning();
 
     logger.info({ url: blob.url, entityId }, "Attachment uploaded");
-    return res.json(attachment);
+    return res.status(201).json(attachment);
   } catch (error) {
     logger.error({ error }, "Error uploading attachment");
-    return res.status(500).json({ error: error instanceof Error ? error.message : "Falha no upload" });
+    return res.status(500).json({ error: { code: "UPLOAD_ERROR", message: error instanceof Error ? error.message : "Falha no upload" } });
   }
 });
 
@@ -128,7 +128,7 @@ router.get("/", async (req, res) => {
   const { entityType, entityId } = req.query;
 
   if (!entityType || !entityId) {
-    return res.status(400).json({ error: "entityType and entityId are required" });
+    return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "entityType e entityId são obrigatórios" } });
   }
 
   try {
@@ -144,7 +144,7 @@ router.get("/", async (req, res) => {
     return res.json(docs);
   } catch (error) {
     logger.error({ error }, "Error listing attachments");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -155,7 +155,7 @@ router.delete("/:id", async (req, res) => {
     const [deleted] = await db.delete(attachmentsTable).where(eq(attachmentsTable.id, id)).returning();
 
     if (!deleted) {
-      return res.status(404).json({ error: "Attachment not found" });
+      return res.status(404).json({ error: { code: "NOT_FOUND", message: "Anexo não encontrado" } });
     }
 
     try {
@@ -167,7 +167,7 @@ router.delete("/:id", async (req, res) => {
     return res.status(204).end();
   } catch (error) {
     logger.error({ error }, "Error deleting attachment");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -178,7 +178,7 @@ router.get("/:id/download", async (req, res) => {
     const [attachment] = await db.select().from(attachmentsTable).where(eq(attachmentsTable.id, id));
 
     if (!attachment) {
-      return res.status(404).json({ error: "Attachment not found" });
+      return res.status(404).json({ error: { code: "NOT_FOUND", message: "Anexo não encontrado" } });
     }
 
     const blobRes = await fetch(attachment.filename, {
@@ -188,7 +188,7 @@ router.get("/:id/download", async (req, res) => {
     });
 
     if (!blobRes.ok || !blobRes.body) {
-      return res.status(404).json({ error: "File not found in storage" });
+      return res.status(404).json({ error: { code: "NOT_FOUND", message: "Arquivo não encontrado no armazenamento" } });
     }
 
     const contentType = blobRes.headers.get("content-type") || attachment.mimeType;
@@ -203,7 +203,7 @@ router.get("/:id/download", async (req, res) => {
     return;
   } catch (error) {
     logger.error({ error }, "Error downloading attachment");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 

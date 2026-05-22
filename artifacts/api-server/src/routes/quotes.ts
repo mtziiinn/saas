@@ -10,7 +10,7 @@ router.use(requireAuth);
 
 router.get("/", async (req, res) => {
   const { contactId } = req.query;
-  if (!contactId) return res.status(400).json({ error: "contactId is required" });
+  if (!contactId) return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "contactId é obrigatório" } });
 
   try {
     const quotes = await db
@@ -21,7 +21,7 @@ router.get("/", async (req, res) => {
     return res.json(quotes);
   } catch (error) {
     logger.error({ error }, "Error listing quotes");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -30,12 +30,12 @@ router.post("/", async (req, res) => {
   const userId = (req.user as any).userId;
 
   if (!contactId || !title || !items || !Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ error: "contactId, title e items são obrigatórios" });
+    return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "contactId, title e items são obrigatórios" } });
   }
 
   for (const item of items) {
     if (!item.description || !item.unitPrice || item.quantity < 1) {
-      return res.status(400).json({ error: "Cada item deve ter description, unitPrice e quantity >= 1" });
+      return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Cada item deve ter description, unitPrice e quantity >= 1" } });
     }
   }
 
@@ -56,10 +56,10 @@ router.post("/", async (req, res) => {
     await db.insert(quoteItemsTable).values(quoteItems);
 
     logger.info({ quoteId: quote.id, contactId }, "Quote created");
-    return res.json({ ...quote, items: quoteItems });
+    return res.status(201).json({ ...quote, items: quoteItems });
   } catch (error) {
     logger.error({ error }, "Error creating quote");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -68,7 +68,7 @@ router.patch("/:id/status", async (req, res) => {
   const validStatuses = ["draft", "sent", "accepted", "rejected", "expired"];
 
   if (!validStatuses.includes(status)) {
-    return res.status(400).json({ error: "Status inválido" });
+    return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Status inválido" } });
   }
 
   try {
@@ -78,13 +78,13 @@ router.patch("/:id/status", async (req, res) => {
       .where(eq(quotesTable.id, Number(req.params.id)))
       .returning();
 
-    if (!updated) return res.status(404).json({ error: "Orçamento não encontrado" });
+    if (!updated) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Orçamento não encontrado" } });
 
     logger.info({ quoteId: updated.id, status }, "Quote status updated");
     return res.json(updated);
   } catch (error) {
     logger.error({ error }, "Error updating quote status");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -94,12 +94,12 @@ router.delete("/:id", async (req, res) => {
       .delete(quotesTable)
       .where(eq(quotesTable.id, Number(req.params.id)))
       .returning();
-    if (!deleted) return res.status(404).json({ error: "Orçamento não encontrado" });
+    if (!deleted) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Orçamento não encontrado" } });
     logger.info({ quoteId: deleted.id }, "Quote deleted");
     return res.status(204).end();
   } catch (error) {
     logger.error({ error }, "Error deleting quote");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -110,7 +110,7 @@ router.get("/:id/pdf", async (req, res) => {
     const PDFDocument = (await import("pdfkit")).default;
 
     const [quote] = await db.select().from(quotesTable).where(eq(quotesTable.id, id));
-    if (!quote) return res.status(404).json({ error: "Orçamento não encontrado" });
+    if (!quote) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Orçamento não encontrado" } });
 
     const [contact] = await db.select().from(contactsTable).where(eq(contactsTable.id, quote.contactId));
     const items = await db.select().from(quoteItemsTable).where(eq(quoteItemsTable.quoteId, id));
@@ -202,7 +202,7 @@ router.get("/:id/pdf", async (req, res) => {
     return;
   } catch (error) {
     logger.error({ error }, "Error generating PDF");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 

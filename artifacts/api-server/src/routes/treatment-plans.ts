@@ -199,14 +199,14 @@ router.get("/procedure-products/:procedureId", async (req, res) => {
     return res.json(items);
   } catch (error) {
     logger.error({ error }, "Error listing procedure products");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
 router.post("/procedure-products", async (req, res) => {
   const { procedureId, productId, quantity } = req.body;
   if (!procedureId || !productId) {
-    return res.status(400).json({ error: "procedureId e productId são obrigatórios" });
+    return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "procedureId, productId e quantity são obrigatórios" } });
   }
   try {
     const [item] = await db
@@ -214,10 +214,10 @@ router.post("/procedure-products", async (req, res) => {
       .values({ procedureId: Number(procedureId), productId: Number(productId), quantity: Number(quantity) || 1 })
       .returning();
     logger.info({ procedureId, productId }, "Product linked to procedure");
-    return res.json(item);
+    return res.status(201).json(item);
   } catch (error) {
     logger.error({ error }, "Error linking product to procedure");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -225,11 +225,11 @@ router.delete("/procedure-products/:id", async (req, res) => {
   const id = Number(req.params.id);
   try {
     const [deleted] = await db.delete(procedureProductsTable).where(eq(procedureProductsTable.id, id)).returning();
-    if (!deleted) return res.status(404).json({ error: "Vínculo não encontrado" });
+    if (!deleted) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Vínculo não encontrado" } });
     return res.status(204).end();
   } catch (error) {
     logger.error({ error }, "Error deleting procedure product link");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 

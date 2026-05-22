@@ -12,7 +12,7 @@ router.use(requireAuth);
 
 router.get("/notes", async (req, res) => {
   const { contactId } = req.query;
-  if (!contactId) return res.status(400).json({ error: "contactId is required" });
+  if (!contactId) return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "contactId é obrigatório" } });
 
   try {
     const notes = await db
@@ -23,7 +23,7 @@ router.get("/notes", async (req, res) => {
     return res.json(notes);
   } catch (error) {
     logger.error({ error }, "Error listing clinical notes");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -32,15 +32,15 @@ router.post("/notes", async (req, res) => {
   const userId = (req.user as any).userId;
 
   if (!contactId || !type || !content) {
-    return res.status(400).json({ error: "contactId, type e content são obrigatórios" });
+    return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "contactId, type e content são obrigatórios" } });
   }
 
   if (!["evolution", "prescription", "observation"].includes(type)) {
-    return res.status(400).json({ error: "Tipo inválido" });
+    return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Tipo de nota inválido" } });
   }
 
   if (content.trim().length < 10) {
-    return res.status(400).json({ error: "Conteúdo deve ter pelo menos 10 caracteres" });
+    return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Conteúdo deve ter pelo menos 10 caracteres" } });
   }
 
   try {
@@ -49,10 +49,10 @@ router.post("/notes", async (req, res) => {
       .values({ contactId: Number(contactId), type, content, authorId: userId })
       .returning();
     logger.info({ noteId: note.id, contactId, type }, "Clinical note created");
-    return res.json(note);
+    return res.status(201).json(note);
   } catch (error) {
     logger.error({ error }, "Error creating clinical note");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -62,12 +62,12 @@ router.delete("/notes/:id", async (req, res) => {
       .delete(clinicalNotesTable)
       .where(eq(clinicalNotesTable.id, Number(req.params.id)))
       .returning();
-    if (!deleted) return res.status(404).json({ error: "Nota não encontrada" });
+    if (!deleted) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Nota não encontrada" } });
     logger.info({ noteId: deleted.id }, "Clinical note deleted");
     return res.status(204).end();
   } catch (error) {
     logger.error({ error }, "Error deleting clinical note");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -75,7 +75,7 @@ router.delete("/notes/:id", async (req, res) => {
 
 router.get("/prescriptions", async (req, res) => {
   const { contactId } = req.query;
-  if (!contactId) return res.status(400).json({ error: "contactId is required" });
+  if (!contactId) return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "contactId é obrigatório" } });
 
   try {
     const prescriptions = await db
@@ -86,7 +86,7 @@ router.get("/prescriptions", async (req, res) => {
     return res.json(prescriptions);
   } catch (error) {
     logger.error({ error }, "Error listing prescriptions");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -95,7 +95,7 @@ router.post("/prescriptions", async (req, res) => {
   const userId = (req.user as any).userId;
 
   if (!contactId || !medication || !dosage || !duration) {
-    return res.status(400).json({ error: "contactId, medication, dosage e duration são obrigatórios" });
+    return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "contactId, medication, dosage e duration são obrigatórios" } });
   }
 
   try {
@@ -104,10 +104,10 @@ router.post("/prescriptions", async (req, res) => {
       .values({ contactId: Number(contactId), medication, dosage, duration, notes, authorId: userId })
       .returning();
     logger.info({ prescriptionId: prescription.id, contactId }, "Prescription created");
-    return res.json(prescription);
+    return res.status(201).json(prescription);
   } catch (error) {
     logger.error({ error }, "Error creating prescription");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -117,12 +117,12 @@ router.delete("/prescriptions/:id", async (req, res) => {
       .delete(prescriptionsTable)
       .where(eq(prescriptionsTable.id, Number(req.params.id)))
       .returning();
-    if (!deleted) return res.status(404).json({ error: "Prescrição não encontrada" });
+    if (!deleted) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Prescrição não encontrada" } });
     logger.info({ prescriptionId: deleted.id }, "Prescription deleted");
     return res.status(204).end();
   } catch (error) {
     logger.error({ error }, "Error deleting prescription");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 

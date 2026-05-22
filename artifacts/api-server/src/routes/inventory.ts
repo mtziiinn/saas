@@ -20,25 +20,25 @@ router.get("/inventory/categories", async (_req, res) => {
     return res.json(categories);
   } catch (error) {
     logger.error({ error }, "Error listing categories");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
 router.post("/inventory/categories", async (req, res) => {
   const { name } = req.body;
   if (!name || typeof name !== "string" || !name.trim()) {
-    return res.status(400).json({ error: "Nome da categoria é obrigatório" });
+    return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Nome da categoria é obrigatório" } });
   }
   try {
     const [category] = await db.insert(productCategoriesTable).values({ name: name.trim() }).returning();
     logger.info({ categoryId: category.id }, "Category created");
-    return res.json(category);
+    return res.status(201).json(category);
   } catch (error: any) {
     if (error?.code === "23505") {
-      return res.status(409).json({ error: "Categoria já existe" });
+      return res.status(409).json({ error: { code: "CONFLICT", message: "Categoria já existe" } });
     }
     logger.error({ error }, "Error creating category");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -46,7 +46,7 @@ router.put("/inventory/categories/:id", async (req, res) => {
   const id = Number(req.params.id);
   const { name } = req.body;
   if (!name || typeof name !== "string" || !name.trim()) {
-    return res.status(400).json({ error: "Nome da categoria é obrigatório" });
+    return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Nome da categoria é obrigatório" } });
   }
   try {
     const [updated] = await db
@@ -54,11 +54,11 @@ router.put("/inventory/categories/:id", async (req, res) => {
       .set({ name: name.trim() })
       .where(eq(productCategoriesTable.id, id))
       .returning();
-    if (!updated) return res.status(404).json({ error: "Categoria não encontrada" });
+    if (!updated) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Categoria não encontrada" } });
     return res.json(updated);
   } catch (error) {
     logger.error({ error }, "Error updating category");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -66,12 +66,12 @@ router.delete("/inventory/categories/:id", async (req, res) => {
   const id = Number(req.params.id);
   try {
     const [deleted] = await db.delete(productCategoriesTable).where(eq(productCategoriesTable.id, id)).returning();
-    if (!deleted) return res.status(404).json({ error: "Categoria não encontrada" });
+    if (!deleted) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Categoria não encontrada" } });
     logger.info({ categoryId: id }, "Category deleted");
     return res.status(204).end();
   } catch (error) {
     logger.error({ error }, "Error deleting category");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -98,14 +98,14 @@ router.get("/inventory/products", async (req, res) => {
     return res.json(products);
   } catch (error) {
     logger.error({ error }, "Error listing products");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
 router.post("/inventory/products", async (req, res) => {
   const { name, categoryId, quantity, minStock, costPrice, salePrice } = req.body;
   if (!name || typeof name !== "string" || !name.trim()) {
-    return res.status(400).json({ error: "Nome do produto é obrigatório" });
+    return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Nome do produto é obrigatório" } });
   }
   try {
     const [product] = await db
@@ -120,10 +120,10 @@ router.post("/inventory/products", async (req, res) => {
       })
       .returning();
     logger.info({ productId: product.id }, "Product created");
-    return res.json(product);
+    return res.status(201).json(product);
   } catch (error) {
     logger.error({ error }, "Error creating product");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -144,11 +144,11 @@ router.put("/inventory/products/:id", async (req, res) => {
       })
       .where(eq(productsTable.id, id))
       .returning();
-    if (!updated) return res.status(404).json({ error: "Produto não encontrado" });
+    if (!updated) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Produto não encontrado" } });
     return res.json(updated);
   } catch (error) {
     logger.error({ error }, "Error updating product");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -156,12 +156,12 @@ router.delete("/inventory/products/:id", async (req, res) => {
   const id = Number(req.params.id);
   try {
     const [deleted] = await db.delete(productsTable).where(eq(productsTable.id, id)).returning();
-    if (!deleted) return res.status(404).json({ error: "Produto não encontrado" });
+    if (!deleted) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Produto não encontrado" } });
     logger.info({ productId: id }, "Product deleted");
     return res.status(204).end();
   } catch (error) {
     logger.error({ error }, "Error deleting product");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -182,26 +182,26 @@ router.get("/inventory/movements", async (req, res) => {
     return res.json(movements);
   } catch (error) {
     logger.error({ error }, "Error listing movements");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
 router.post("/inventory/movements", async (req, res) => {
   const { productId, type, quantity, reason } = req.body;
   if (!productId || !type || !quantity) {
-    return res.status(400).json({ error: "productId, type e quantity são obrigatórios" });
+    return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "productId, type e quantity são obrigatórios" } });
   }
   if (!["in", "out", "adjustment"].includes(type)) {
-    return res.status(400).json({ error: "Tipo inválido. Use: in, out ou adjustment" });
+    return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Tipo inválido. Use: in, out ou adjustment" } });
   }
   const qty = type === "in" ? Math.abs(Number(quantity)) : -Math.abs(Number(quantity));
   try {
     const product = await db.select().from(productsTable).where(eq(productsTable.id, Number(productId))).limit(1);
-    if (!product[0]) return res.status(404).json({ error: "Produto não encontrado" });
+    if (!product[0]) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Produto não encontrado" } });
 
     const newQty = product[0].quantity + qty;
     if (newQty < 0) {
-      return res.status(400).json({ error: "Estoque insuficiente para esta saída" });
+      return res.status(400).json({ error: { code: "INSUFFICIENT_STOCK", message: "Estoque insuficiente para esta saída" } });
     }
 
     const [movement] = await db
@@ -212,10 +212,10 @@ router.post("/inventory/movements", async (req, res) => {
     await db.update(productsTable).set({ quantity: newQty, updatedAt: new Date() }).where(eq(productsTable.id, Number(productId)));
 
     logger.info({ productId, type, qty }, "Inventory movement recorded");
-    return res.json(movement);
+    return res.status(201).json(movement);
   } catch (error) {
     logger.error({ error }, "Error recording movement");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
@@ -231,7 +231,7 @@ router.get("/inventory/low-stock", async (_req, res) => {
     return res.json(products);
   } catch (error) {
     logger.error({ error }, "Error listing low stock products");
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Erro interno do servidor" } });
   }
 });
 
