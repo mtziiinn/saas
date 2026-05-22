@@ -222,7 +222,7 @@ export default function Dashboard() {
             <p className="text-sm text-muted-foreground">Distribuição por estágio.</p>
           </CardHeader>
           <CardContent>
-            <div className="h-[240px] w-full">
+            <div className="h-60 w-full">
               {contactsByStatusLoading ? (
                 <div className="h-full w-full flex items-center justify-center">
                   <Skeleton className="h-40 w-40 rounded-full" />

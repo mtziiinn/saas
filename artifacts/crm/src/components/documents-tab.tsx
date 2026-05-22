@@ -222,7 +222,7 @@ export function DocumentsTab({ entityType, entityId }: DocumentsTabProps) {
                       <div className="flex items-center gap-2">
                         <FileIcon className="h-4 w-4 text-primary" />
                         <span
-                          className="truncate max-w-[200px]"
+                          className="truncate max-w-50"
                           title={doc.originalName}
                         >
                           {doc.originalName}
