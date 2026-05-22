@@ -1,8 +1,0 @@
-uploads = []
-generated = []
-
-[[outputs]]
-id = "laW30-WmW-S59T4_-kMfP"
-uri = "file://crm-project.tar.gz"
-type = "unspecified"
-title = "CRM para Agências — Código-fonte completo"
