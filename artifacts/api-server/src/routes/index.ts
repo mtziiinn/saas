@@ -16,6 +16,7 @@ import clinicalRecordsRouter from "./clinical-records";
 import quotesRouter from "./quotes";
 import inventoryRouter from "./inventory";
 import commissionsRouter from "./commissions";
+import reportsRouter from "./reports";
 
 const router: IRouter = Router();
 
@@ -36,5 +37,6 @@ router.use("/clinical-records", clinicalRecordsRouter);
 router.use("/quotes", quotesRouter);
 router.use(inventoryRouter);
 router.use(commissionsRouter);
+router.use(reportsRouter);
 
 export default router;
