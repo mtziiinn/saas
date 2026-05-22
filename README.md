@@ -84,7 +84,45 @@ Monorepo com `pnpm workspaces`:
 
 ---
 
-## Configuração
+## Scripts
+
+| Comando | Descrição |
+|---|---|
+| `pnpm dev` | Sobe frontend (Vite) + backend (Express) em paralelo |
+| `pnpm build` | TypeCheck + build de todos os pacotes |
+| `pnpm typecheck` | Valida tipos em libs e artifacts |
+| `pnpm vercel:login` | Login no Vercel CLI |
+| `pnpm vercel:pull` | Puxa variáveis de ambiente do Vercel |
+
+---
+
+## Deploy
+
+O deploy é feito automaticamente pelo **Vercel** ao fazer push na branch `main`.
+
+### Fluxo do build (Vercel)
+
+1. `drizzle-kit push` — sincroniza o schema do banco
+2. `pnpm build` — typecheck + build de todos os pacotes
+3. O frontend é servido como SPA, a API como serverless functions
+
+### Configuração
+
+- **Build command:** `pnpm --filter @workspace/db exec drizzle-kit push --config ./drizzle.config.ts && pnpm run build`
+- **Output directory:** `artifacts/crm/dist/public`
+- **Rewrites:** rotas `/api/*` apontam para `api/index.mjs`, demais rotas servem `index.html`
+
+### Variáveis de ambiente necessárias
+
+```env
+DATABASE_URL=postgres://...
+BLOB_READ_WRITE_TOKEN=vercel_blob_rw_...
+JWT_SECRET=seu_secret
+```
+
+---
+
+## Configuração local
 
 ### Pré-requisitos
 - Node.js 18+ + pnpm
