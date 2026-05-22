@@ -42,6 +42,18 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function PageSkeleton() {
+  return (
+    <div className="space-y-6 p-6 animate-pulse">
+      <div className="h-8 w-48 bg-muted rounded" />
+      <div className="h-4 w-72 bg-muted rounded" />
+      <div className="grid grid-cols-4 gap-4 mt-8">
+        {[1, 2, 3, 4].map(i => <div key={i} className="h-28 bg-muted rounded-lg" />)}
+      </div>
+    </div>
+  );
+}
+
 function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -62,23 +74,25 @@ function Router() {
         <Route>
           <ProtectedRoute>
             <AppLayout>
-              <Switch>
-                <Route path="/" component={Dashboard} />
-                <Route path="/contacts" component={Contacts} />
-                <Route path="/contacts/:id" component={ContactDetail} />
-                <Route path="/companies" component={Companies} />
-                <Route path="/companies/:id" component={CompanyDetail} />
-                <Route path="/tasks" component={Tasks} />
-                <Route path="/treatment-plans" component={TreatmentPlans} />
-                <Route path="/treatment-plans/:id" component={TreatmentPlans} />
-                <Route path="/financial" component={Financial} />
-                <Route path="/inventory" component={Inventory} />
-                <Route path="/commissions" component={Commissions} />
-                <Route path="/activity-log" component={ActivityLog} />
-                <Route path="/reports" component={Reports} />
-                <Route path="/settings" component={Settings} />
-                <Route component={NotFound} />
-              </Switch>
+              <Suspense fallback={<PageSkeleton />}>
+                <Switch>
+                  <Route path="/" component={Dashboard} />
+                  <Route path="/contacts" component={Contacts} />
+                  <Route path="/contacts/:id" component={ContactDetail} />
+                  <Route path="/companies" component={Companies} />
+                  <Route path="/companies/:id" component={CompanyDetail} />
+                  <Route path="/tasks" component={Tasks} />
+                  <Route path="/treatment-plans" component={TreatmentPlans} />
+                  <Route path="/treatment-plans/:id" component={TreatmentPlans} />
+                  <Route path="/financial" component={Financial} />
+                  <Route path="/inventory" component={Inventory} />
+                  <Route path="/commissions" component={Commissions} />
+                  <Route path="/activity-log" component={ActivityLog} />
+                  <Route path="/reports" component={Reports} />
+                  <Route path="/settings" component={Settings} />
+                  <Route component={NotFound} />
+                </Switch>
+              </Suspense>
             </AppLayout>
           </ProtectedRoute>
         </Route>
